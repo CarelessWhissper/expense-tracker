@@ -1,3 +1,5 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -10,9 +12,6 @@ import Toast from "react-native-toast-message";
 import { useDispatch } from "react-redux";
 import { z } from "zod";
 import { signUp } from "../../redux/authSlice";
-
-// schema
-
 const signUpSchema = z
   .object({
     name: z.string().min(2, "Naam moet minimaal 2 karakters bevatten"),
@@ -26,10 +25,12 @@ const signUpSchema = z
     message: "Wachtwoorden komen niet overeen",
     path: ["confirmPassword"],
   });
+
 type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [formData, setFormData] = useState<SignUpFormData>({
     name: "",
     email: "",
@@ -39,6 +40,9 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
   const [errors, setErrors] = useState<
     Partial<Record<keyof SignUpFormData, string>>
   >({});
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleSignUp = () => {
     try {
@@ -79,7 +83,7 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
       } else {
         Toast.show({
           type: "error",
-          text1: "Iets is miss gegaan, graag opnieuw proberen",
+          text1: "Iets is mis gegaan, probeer opnieuw",
         });
       }
     }
@@ -87,8 +91,10 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Registeren</Text>
+      <Text style={styles.title}>Maak een account</Text>
+      <Text style={styles.subtitle}>Welkom! Vul je gegevens hieronder in.</Text>
 
+      {/* Name */}
       <TextInput
         style={styles.input}
         placeholder="Gebruiker Naam"
@@ -97,6 +103,7 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
       />
       {errors.name && <Text style={styles.error}>{errors.name}</Text>}
 
+      {/* Email */}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -107,30 +114,67 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
       />
       {errors.email && <Text style={styles.error}>{errors.email}</Text>}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Wachtwoord"
-        value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
-        secureTextEntry
-      />
+      {/* Password */}
+
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder="Wachtwoord"
+          value={formData.password}
+          onChangeText={(text) => setFormData({ ...formData, password: text })}
+          secureTextEntry={!showPassword}
+        />
+
+        <TouchableOpacity
+          style={styles.eyeButton}
+          onPress={() => setShowPassword(!showPassword)}
+        >
+          <Ionicons
+            name={showPassword ? "eye-off" : "eye"}
+            size={22}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
+
       {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Wachtwoord Bevestigen"
-        value={formData.confirmPassword}
-        onChangeText={(text) =>
-          setFormData({ ...formData, confirmPassword: text })
-        }
-        secureTextEntry
-      />
+      {/* Confirm Password */}
+
+      {/* Confirm Password */}
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder="Wachtwoord bevestigen"
+          value={formData.confirmPassword}
+          onChangeText={(text) =>
+            setFormData({ ...formData, confirmPassword: text })
+          }
+          secureTextEntry={!showConfirm}
+        />
+
+        <TouchableOpacity
+          style={styles.eyeButton}
+          onPress={() => setShowConfirm(!showConfirm)}
+        >
+          <Ionicons
+            name={showConfirm ? "eye-off" : "eye"}
+            size={22}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
+
       {errors.confirmPassword && (
         <Text style={styles.error}>{errors.confirmPassword}</Text>
       )}
 
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Sign Up</Text>
+        <Text style={styles.buttonText}>Account aanmaken</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
+        <Text style={styles.link}>Heb je all een account? Log In</Text>
       </TouchableOpacity>
     </View>
   );
@@ -138,37 +182,71 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 24,
+    flex: 1,
+    justifyContent: "center",
+    maxWidth: 380,
+    alignSelf: "center",
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: "700",
     textAlign: "center",
+    marginBottom: 6,
+    color: "#111",
+  },
+  inputWrapper: {
+    position: "relative",
+    justifyContent: "center",
+  },
+
+  eyeButton: {
+    position: "absolute",
+    right: 14,
+    height: "100%",
+    justifyContent: "center",
+  },
+
+  subtitle: {
+    textAlign: "center",
+    color: "#555",
+    fontSize: 15,
+    marginBottom: 24,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2,
   },
   error: {
-    color: "red",
-    fontSize: 12,
-    marginBottom: 12,
+    color: "#d9534f",
+    fontSize: 13,
+    marginBottom: 10,
+    marginLeft: 4,
   },
   button: {
     backgroundColor: "#377D22",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 12,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginTop: 18,
   },
   buttonText: {
-    color: "white",
     textAlign: "center",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
+    color: "#fff",
+  },
+  link: {
+    textAlign: "center",
+    color: "#377D22",
+    marginTop: 16,
   },
 });

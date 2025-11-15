@@ -1,16 +1,17 @@
 // components/SignInForm.tsx
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
   StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { z } from "zod";
 import { login } from "../../redux/authSlice";
-import { useRouter } from "expo-router";
 const signInSchema = z.object({
   email: z.string().email("Ongeldig e-mailadres"),
   password: z.string().min(1, "Wachtwoord is verplicht"),
@@ -29,13 +30,12 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
     Partial<Record<keyof SignInFormData, string>>
   >({});
   const [loginError, setLoginError] = useState<string>("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignIn = () => {
     try {
-      // Validate form data
       const validatedData = signInSchema.parse(formData);
 
-      // Check if user exists in credentials
       const user = credentials.find(
         (cred: any) =>
           cred.email === validatedData.email &&
@@ -43,18 +43,10 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
       );
 
       if (user) {
-        // Login successful - dispatch without password
-        dispatch(
-          login({
-            email: user.email,
-            name: user.name,
-          })
-        );
-
+        dispatch(login({ email: user.email, name: user.name }));
         setFormData({ email: "", password: "" });
         setErrors({});
         setLoginError("");
-
         onSuccess?.();
       } else {
         setLoginError("Ongeldig e-mailadres of wachtwoord");
@@ -74,28 +66,54 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>Welcome Back </Text>
 
-      {loginError && <Text style={styles.loginError}>{loginError}</Text>}
+      {loginError !== "" && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorBoxText}>{loginError}</Text>
+        </View>
+      )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+      <View style={styles.inputGroup}>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#999"
+          value={formData.email}
+          onChangeText={(text) => setFormData({ ...formData, email: text })}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Wachtwoord"
-        value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
-        secureTextEntry
-      />
-      {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+      <View style={styles.inputGroup}>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="Wachtwoord"
+            placeholderTextColor="#999"
+            value={formData.password}
+            onChangeText={(text) =>
+              setFormData({ ...formData, password: text })
+            }
+            secureTextEntry={!showPassword}
+          />
+
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={22}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
+
+        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleSignIn}>
         <Text style={styles.buttonText}>Sign In</Text>
@@ -104,55 +122,93 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
       <View style={styles.linkContainer}>
         <Text style={styles.linkText}>Nog geen account? </Text>
         <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
-          <Text style={styles.link}>Registeer</Text>
+          <Text style={styles.link}>Registreer</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    padding: 26,
+    justifyContent: "center",
   },
+
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: "700",
     textAlign: "center",
+    marginBottom: 30,
   },
+
+  inputWrapper: {
+    position: "relative",
+    width: "100%",
+    justifyContent: "center",
+  },
+
+  eyeButton: {
+    position: "absolute",
+    right: 14,
+    top: "50%",
+    transform: [{ translateY: -12 }],
+    padding: 4,
+  },
+
+  inputGroup: {
+    marginBottom: 14,
+  },
+
   input: {
     borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    borderColor: "#e3e3e3",
+    backgroundColor: "#fafafa",
+    padding: 14,
+    borderRadius: 10,
     fontSize: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
   },
+
   error: {
-    color: "red",
+    color: "#d9534f",
     fontSize: 12,
-    marginBottom: 12,
+    marginTop: 4,
+    paddingLeft: 4,
   },
-  loginError: {
-    color: "red",
-    fontSize: 14,
+
+  errorBox: {
+    backgroundColor: "#ffe8e8",
+    padding: 12,
+    borderRadius: 10,
     marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: "#d9534f",
+  },
+  errorBoxText: {
+    color: "#b52b27",
     textAlign: "center",
-    backgroundColor: "#ffe6e6",
-    padding: 10,
-    borderRadius: 8,
+    fontSize: 14,
   },
+
   button: {
-   backgroundColor: "#377D22",
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 12,
+    backgroundColor: "#377D22",
+    paddingVertical: 16,
+    borderRadius: 10,
+    marginTop: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
+
   buttonText: {
     color: "white",
     textAlign: "center",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
   },
 
@@ -161,13 +217,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 20,
   },
+
   linkText: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#666",
   },
+
   link: {
-    fontSize: 14,
-    color: "#377D22", 
-    fontWeight: "600",
+    fontSize: 15,
+    color: "#377D22",
+    fontWeight: "700",
   },
 });

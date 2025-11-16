@@ -1,4 +1,4 @@
-// app/_layout.tsx
+
 import {
   DarkTheme,
   DefaultTheme,
@@ -7,16 +7,21 @@ import {
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
-import { Provider, useSelector } from "react-redux";
+import { Provider, useSelector, useDispatch } from "react-redux";
 import { store, persistor } from "../redux/store";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useState } from "react";
 import { PersistGate } from "redux-persist/integration/react";
+import { scheduleReminderNotification } from "@/utils/reminderSchedule";
+import { loadRemindersFromStorage } from "@/redux/remindersSlice";
+import * as Notifications from "expo-notifications";
+
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const segments = useSegments();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [isNavigationReady, setIsNavigationReady] = useState(false);
 
   const isAuthenticated = useSelector(
@@ -24,7 +29,6 @@ function RootLayoutNav() {
   );
 
   useEffect(() => {
-    // Mark navigation as ready after first render
     setIsNavigationReady(true);
   }, []);
 
@@ -34,13 +38,43 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to sign-in if not authenticated
       router.replace("/(auth)/sign-in");
     } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to tabs if authenticated
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, segments, isNavigationReady]);
+  }, [isAuthenticated, segments, isNavigationReady, router]);
+
+ 
+  useEffect(() => {
+    async function setupNotifications() {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Permission not granted for notifications");
+        return;
+      }
+
+      
+      try {
+        const token = await Notifications.getExpoPushTokenAsync();
+        console.log("Expo Push Token:", token.data);
+      } catch (error) {
+        console.log("Push token error", error);
+      }
+
+      // Load reminders
+      await dispatch(loadRemindersFromStorage());
+
+      const state = store.getState().reminders;
+
+      state.reminders.forEach((reminder) => {
+        if (reminder.isActive) {
+          scheduleReminderNotification(reminder, state.notificationTime);
+        }
+      });
+    }
+
+    setupNotifications();
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>

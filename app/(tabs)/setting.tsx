@@ -1,31 +1,62 @@
 import { logout } from "@/redux/authSlice";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useDispatch } from "react-redux";
-
 export default function SettingsScreen() {
   const dispatch = useDispatch();
-
+  const router = useRouter();
   const handleLogout = () => {
     dispatch(logout());
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Category: Settings */}
       <Text style={styles.categoryTitle}>Settings</Text>
 
+      <TouchableOpacity style={styles.item} onPress={() => router.push("/")}>
+        <Text style={styles.itemText}>Recurring Payments</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.item} onPress={() => router.push("/(settings)/savings-reminder")}>
+        <Text style={styles.itemText}>Savings Reminder</Text>
+      </TouchableOpacity>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
       {/* List Item: Change Password */}
-      <TouchableOpacity style={styles.item} onPress={() => { /* TODO */ }}>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          /* TODO */
+        }}
+      >
         <Text style={styles.itemText}>Change Password</Text>
       </TouchableOpacity>
 
       {/* List Item: Language */}
-      <TouchableOpacity style={styles.item} onPress={() => { /* TODO */ }}>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          /* TODO */
+        }}
+      >
         <Text style={styles.itemText}>Language</Text>
       </TouchableOpacity>
 
       {/* List Item: Clear Cache */}
-      <TouchableOpacity style={styles.item} onPress={() => { /* TODO */ }}>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          /* TODO */
+        }}
+      >
         <Text style={styles.itemText}>Clear Cache</Text>
       </TouchableOpacity>
 
@@ -34,7 +65,9 @@ export default function SettingsScreen() {
 
       {/* List Item: Log Out */}
       <TouchableOpacity style={styles.item} onPress={handleLogout}>
-        <Text style={[styles.itemText, { color: "#d9534f", fontWeight: "bold" }]}>
+        <Text
+          style={[styles.itemText, { color: "#d9534f", fontWeight: "bold" }]}
+        >
           Log Out
         </Text>
       </TouchableOpacity>

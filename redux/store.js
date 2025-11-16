@@ -6,18 +6,20 @@ import { combineReducers } from "redux";
 
 import authReducer from "./authSlice";
 import transactionsReducer from "./transactionsSlice";
+import remindersReducer from "./remindersSlice";
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
-  // Only persist these reducers
-  whitelist: ["auth", "transactions"],
+  // Persist all three reducers, no api for now
+  whitelist: ["auth", "transactions", "reminders"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   transactions: transactionsReducer,
+  reminders: remindersReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

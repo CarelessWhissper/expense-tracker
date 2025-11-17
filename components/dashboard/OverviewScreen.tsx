@@ -1,27 +1,30 @@
-import React, { useMemo } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
-import { useSelector } from "react-redux";
-import { LinearGradient } from "expo-linear-gradient";
-import Toast from "react-native-toast-message";
-import {
-  MaterialIcons,
   FontAwesome,
   Ionicons,
   MaterialCommunityIcons,
+  MaterialIcons,
 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useMemo } from "react";
+import {
+  Dimensions,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSelector } from "react-redux";
+import { IconSymbol } from "../ui/icon-symbol";
 const { width } = Dimensions.get("window");
 
 export default function OverviewScreen() {
   const { transactions, weeklyBudget, savingsGoal, currentSavings } =
     useSelector((state: any) => state.transactions);
   const user = useSelector((state: any) => state.auth.user);
+  const router = useRouter();
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -100,7 +103,6 @@ export default function OverviewScreen() {
           0
         )}% van je weekbudget gebruikt!`,
         color: "#FF6B6B",
-    
       };
     }
 
@@ -158,167 +160,179 @@ export default function OverviewScreen() {
   };
 
   return (
-     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hallo, {user?.name || "User"}!</Text>
-          <Text style={styles.subGreeting}>
-            {new Date().toLocaleDateString("nl-NL", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Hallo, {user?.name || "User"}!</Text>
+            <Text style={styles.subGreeting}>
+              {new Date().toLocaleDateString("nl-NL", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </Text>
+          </View>
+        </View>
+
+        {/* AI Nudge Card */}
+        <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
+          <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
+          <Text style={styles.nudgeText}>{nudge.message}</Text>
+        </View>
+
+        {/* Budget Overview Card */}
+        <LinearGradient
+          colors={["#667eea", "#764ba2"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.budgetCard}
+        >
+          <View style={styles.budgetHeader}>
+            <Text style={styles.budgetLabel}>Week Budget</Text>
+            <Text style={styles.budgetAmount}>
+              €{insights.budgetRemaining.toFixed(2)}
+            </Text>
+            <Text style={styles.budgetSubtext}>
+              van €{weeklyBudget.toFixed(2)} over
+            </Text>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                {
+                  width: `${Math.min(insights.budgetPercentage, 100)}%`,
+                  backgroundColor:
+                    insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.progressText}>
+            {insights.budgetPercentage.toFixed(0)}% gebruikt
+          </Text>
+        </LinearGradient>
+
+        {/* Savings Goal Card */}
+        <View style={styles.savingsCard}>
+          <View style={styles.savingsHeader}>
+            <Text style={styles.savingsTitle}>
+              <MaterialIcons name="savings" size={20} color="#377D22" />{" "}
+              Spaardoel
+            </Text>
+            <Text style={styles.savingsAmount}>
+              €{currentSavings} / €{savingsGoal}
+            </Text>
+          </View>
+          <View style={styles.savingsProgressContainer}>
+            <View
+              style={[
+                styles.savingsProgress,
+                { width: `${insights.savingsPercentage}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.savingsPercentage}>
+            {insights.savingsPercentage.toFixed(0)}% bereikt
           </Text>
         </View>
-      </View>
 
-      {/* AI Nudge Card */}
-      <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
-        <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
-        <Text style={styles.nudgeText}>{nudge.message}</Text>
-      </View>
+        {/* Quick Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <MaterialIcons name="payments" size={24} color="#377D22" />
+            <Text style={styles.statValue}>
+              €{insights.currentWeekSpent.toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Deze week</Text>
+          </View>
 
-      {/* Budget Overview Card */}
-      <LinearGradient
-        colors={["#667eea", "#764ba2"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.budgetCard}
-      >
-        <View style={styles.budgetHeader}>
-          <Text style={styles.budgetLabel}>Week Budget</Text>
-          <Text style={styles.budgetAmount}>
-            €{insights.budgetRemaining.toFixed(2)}
-          </Text>
-          <Text style={styles.budgetSubtext}>
-            van €{weeklyBudget.toFixed(2)} over
-          </Text>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min(insights.budgetPercentage, 100)}%`,
-                backgroundColor:
-                  insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
-              },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {insights.budgetPercentage.toFixed(0)}% gebruikt
-        </Text>
-      </LinearGradient>
-
-      {/* Savings Goal Card */}
-      <View style={styles.savingsCard}>
-        <View style={styles.savingsHeader}>
-          <Text style={styles.savingsTitle}>
-            <MaterialIcons name="savings" size={20} color="#377D22" /> Spaardoel
-          </Text>
-          <Text style={styles.savingsAmount}>
-            €{currentSavings} / €{savingsGoal}
-          </Text>
-        </View>
-        <View style={styles.savingsProgressContainer}>
-          <View
-            style={[
-              styles.savingsProgress,
-              { width: `${insights.savingsPercentage}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.savingsPercentage}>
-          {insights.savingsPercentage.toFixed(0)}% bereikt
-        </Text>
-      </View>
-
-      {/* Quick Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <MaterialIcons name="payments" size={24} color="#377D22" />
-          <Text style={styles.statValue}>
-            €{insights.currentWeekSpent.toFixed(2)}
-          </Text>
-          <Text style={styles.statLabel}>Deze week</Text>
-        </View>
-
-        <View style={styles.statCard}>
-          <MaterialIcons 
-            name={insights.percentageChange > 0 ? "trending-up" : "trending-down"} 
-            size={24} 
-            color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"} 
-          />
-          <Text
-            style={[
-              styles.statValue,
-              {
-                color: insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3",
-              },
-            ]}
-          >
-            {insights.percentageChange > 0 ? "+" : ""}
-            {insights.percentageChange.toFixed(0)}%
-          </Text>
-          <Text style={styles.statLabel}>vs vorige week</Text>
-        </View>
-      </View>
-
-      {/* Recent Transactions */}
-      <View style={styles.transactionsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recente Transacties</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>Bekijk alles</Text>
-          </TouchableOpacity>
-        </View>
-
-        {recentTransactions.map((transaction: any) => (
-          <View key={transaction.id} style={styles.transactionItem}>
-            <View style={styles.transactionLeft}>
-              <View style={styles.iconContainer}>
-                {renderTransactionIcon(transaction)}
-              </View>
-              <View>
-                <Text style={styles.transactionDescription}>
-                  {transaction.description}
-                </Text>
-                <Text style={styles.transactionCategory}>
-                  {transaction.category}
-                </Text>
-              </View>
-            </View>
+          <View style={styles.statCard}>
+            <MaterialIcons
+              name={
+                insights.percentageChange > 0 ? "trending-up" : "trending-down"
+              }
+              size={24}
+              color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"}
+            />
             <Text
               style={[
-                styles.transactionAmount,
+                styles.statValue,
                 {
-                  color: transaction.amount > 0 ? "#95E1D3" : "#2D3436",
+                  color: insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3",
                 },
               ]}
             >
-              {transaction.amount > 0 ? "+" : ""}€
-              {Math.abs(transaction.amount).toFixed(2)}
+              {insights.percentageChange > 0 ? "+" : ""}
+              {insights.percentageChange.toFixed(0)}%
+            </Text>
+            <Text style={styles.statLabel}>vs vorige week</Text>
+          </View>
+        </View>
+
+        {/* Recent Transactions */}
+        <View style={styles.transactionsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recente Transacties</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAll}>Bekijk alles</Text>
+            </TouchableOpacity>
+          </View>
+
+          {recentTransactions.map((transaction: any) => (
+            <View key={transaction.id} style={styles.transactionItem}>
+              <View style={styles.transactionLeft}>
+                <View style={styles.iconContainer}>
+                  {renderTransactionIcon(transaction)}
+                </View>
+                <View>
+                  <Text style={styles.transactionDescription}>
+                    {transaction.description}
+                  </Text>
+                  <Text style={styles.transactionCategory}>
+                    {transaction.category}
+                  </Text>
+                </View>
+              </View>
+              <Text
+                style={[
+                  styles.transactionAmount,
+                  {
+                    color: transaction.amount > 0 ? "#95E1D3" : "#2D3436",
+                  },
+                ]}
+              >
+                {transaction.amount > 0 ? "+" : ""}€
+                {Math.abs(transaction.amount).toFixed(2)}
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Micro-Saving Tip */}
+        <View style={styles.tipCard}>
+          <MaterialIcons name="lightbulb" size={24} color="#FFD700" />
+          <View style={styles.tipContent}>
+            <Text style={styles.tipTitle}>Spaar Tip van de Dag</Text>
+            <Text style={styles.tipText}>
+              Rond je volgende betaling af naar boven en spaar het verschil! Zo
+              kun je automatisch kleine bedragen opzij zetten.
             </Text>
           </View>
-        ))}
-      </View>
-
-      {/* Micro-Saving Tip */}
-      <View style={styles.tipCard}>
-        <MaterialIcons name="lightbulb" size={24} color="#FFD700" />
-        <View style={styles.tipContent}>
-          <Text style={styles.tipTitle}>Spaar Tip van de Dag</Text>
-          <Text style={styles.tipText}>
-            Rond je volgende betaling af naar boven en spaar het verschil! Zo
-            kun je automatisch kleine bedragen opzij zetten.
-          </Text>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+
+      <Pressable
+        style={styles.addTransaction}
+        onPress={() => router.push("/(modals)/transactionModal")}
+      >
+        <IconSymbol size={38} name="plus.app.fill" color="white" />
+      </Pressable>
+    </View>
   );
 }
 const styles = StyleSheet.create({
@@ -429,7 +443,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#2D3436",
-    padding:"auto"
+    padding: "auto",
   },
   savingsAmount: {
     fontSize: 16,
@@ -576,5 +590,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#636E72",
     lineHeight: 18,
+  },
+  addTransaction: {
+    backgroundColor: "#377D22",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 50,
+    width: 50,
+    borderRadius: 25,
+    position: "absolute",
+    bottom: 25,
+    right: 35,
   },
 });

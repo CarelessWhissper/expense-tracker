@@ -1,5 +1,6 @@
 // components/SignInForm.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -66,7 +67,13 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back </Text>
+      <Image
+        source={require("./miMoni-boBG.png")}
+        resizeMode="contain"
+        style={styles.logo}
+      />
+
+      {/* <Text style={styles.title}>Welcome Back </Text> */}
 
       {loginError !== "" && (
         <View style={styles.errorBox}>
@@ -192,6 +199,13 @@ const styles = StyleSheet.create({
     color: "#b52b27",
     textAlign: "center",
     fontSize: 14,
+  },
+
+  logo: {
+    width: 350,
+    height: 350,
+    alignSelf: "center",
+    // marginBottom: 20,
   },
 
   button: {

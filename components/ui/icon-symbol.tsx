@@ -23,7 +23,6 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "gearshape.fill": "settings",
   "plus.circle.fill": "add-circle",
-  "minus.circle.fill": "remove-circle",
   "plus.app.fill": "add",
   "clock.fill": "schedule",
 } as IconMapping;

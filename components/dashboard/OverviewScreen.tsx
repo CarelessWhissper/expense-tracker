@@ -147,7 +147,7 @@ export default function OverviewScreen() {
         type: "insight",
         message: `${
           topCategory[0]
-        } is je grootste uitgave: €${topCategory[1].toFixed(2)}`,
+        } is je grootste uitgave: SRD ${topCategory[1].toFixed(2)}`,
         color: "#4ECDC4",
         icon: "insights" as const,
       };
@@ -291,10 +291,10 @@ export default function OverviewScreen() {
                   />
                 </View>
                 <Text style={styles.budgetAmount}>
-                  €{insights.budgetRemaining.toFixed(2)}
+                  SRD {insights.budgetRemaining.toFixed(2)}
                 </Text>
                 <Text style={styles.budgetSubtext}>
-                  van €{weeklyBudget.toFixed(2)} over
+                  van SRD {weeklyBudget.toFixed(2)} over
                 </Text>
               </View>
 
@@ -347,7 +347,7 @@ export default function OverviewScreen() {
                 {mainSavingsPlan.goalName}
               </Text>
               <Text style={styles.savingsAmount}>
-                €{currentSavings} / €{savingsGoal}
+                SRD {currentSavings} / SRD {savingsGoal}
               </Text>
             </View>
             <View style={styles.savingsProgressContainer}>
@@ -384,7 +384,7 @@ export default function OverviewScreen() {
           <View style={styles.statCard}>
             <MaterialIcons name="payments" size={24} color="#377D22" />
             <Text style={styles.statValue}>
-              €{insights.currentWeekSpent.toFixed(2)}
+              SRD {insights.currentWeekSpent.toFixed(2)}
             </Text>
             <Text style={styles.statLabel}>Deze week</Text>
           </View>
@@ -445,7 +445,7 @@ export default function OverviewScreen() {
                   },
                 ]}
               >
-                {transaction.amount > 0 ? "+" : ""}€
+                {transaction.amount > 0 ? "+" : ""}SRD
                 {Math.abs(transaction.amount).toFixed(2)}
               </Text>
             </View>
@@ -519,7 +519,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0F0F0",
     borderWidth: 1,
     borderColor: "#E5E5E5",
-    minWidth: 120,
+    minWidth: 180,
     justifyContent: "center",
   },
   modeButtonActive: {

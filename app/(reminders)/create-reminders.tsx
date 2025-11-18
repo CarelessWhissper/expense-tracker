@@ -122,7 +122,7 @@ export default function CreateReminderScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Bedrag *</Text>
             <View style={styles.amountInputContainer}>
-              <Text style={styles.currencySymbol}>€</Text>
+              <Text style={styles.currencySymbol}>SRD </Text>
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"
@@ -191,9 +191,7 @@ export default function CreateReminderScreen() {
               <MaterialIcons name="repeat" size={24} color="#377D22" />
               <View>
                 <Text style={styles.switchLabel}>Terugkerend</Text>
-                <Text style={styles.switchSubtext}>
-                  Automatisch herhalen
-                </Text>
+                <Text style={styles.switchSubtext}>Automatisch herhalen</Text>
               </View>
             </View>
             <Switch

@@ -1,6 +1,8 @@
 import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { addTransaction, scanTransaction } from "@/redux/transactionsSlice";
+import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -10,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
@@ -38,7 +41,7 @@ export default function TransactionModal() {
   const [receipt, setReceipt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isScanning, setIsScanning] = useState(false); // Local scanning state
-  
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { scanError } = useAppSelector((state) => state.transactions);
 
@@ -48,11 +51,11 @@ export default function TransactionModal() {
       quality: 0.8,
       base64: true,
     });
-    
+
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       setReceipt(asset.uri);
-      
+
       // Auto-scan when receipt is selected
       if (type === "expense" && asset.base64) {
         await handleScanReceipt(asset.base64, asset.uri);
@@ -78,7 +81,7 @@ export default function TransactionModal() {
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       setReceipt(asset.uri);
-      
+
       // Auto-scan when picture is taken
       if (type === "expense" && asset.base64) {
         await handleScanReceipt(asset.base64, asset.uri);
@@ -88,38 +91,44 @@ export default function TransactionModal() {
 
   async function handleScanReceipt(base64: string, uri: string) {
     setIsScanning(true);
-    
+
     try {
       const fileName = uri.split("/").pop() || "receipt.jpg";
       const filetype = fileName.split(".").pop() === "png" ? "png" : "jpeg";
-      
+
       // Add timeout to the scan request
-      const scanPromise = dispatch(scanTransaction({
-        baseEnc: base64,
-        fileName,
-        filetype,
-      })).unwrap();
+      const scanPromise = dispatch(
+        scanTransaction({
+          baseEnc: base64,
+          fileName,
+          filetype,
+        })
+      ).unwrap();
 
       // Set 30 second timeout
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Scan timeout - please try again")), 30000)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Scan timeout - please try again")),
+          30000
+        )
       );
 
-      const result = await Promise.race([scanPromise, timeoutPromise]) as any;
-      
+      const result = (await Promise.race([scanPromise, timeoutPromise])) as any;
+
       // Auto-fill form with scanned data
       const scanResult = result.rspObject.result;
       setAmount(scanResult.total.toString());
       setMerchant(scanResult.merchant.name);
       setDescription(`Receipt ${scanResult.receiptId}`);
       setCategory("Shopping"); // Default category
-      
+
       Toast.show({
         type: "success",
         text1: "Receipt scanned successfully!",
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Scan failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Scan failed";
       Toast.show({
         type: "error",
         text1: "Scan failed",
@@ -179,10 +188,13 @@ export default function TransactionModal() {
     setReceipt(null);
   }
 
-  const isLoading = isScanning; 
+  const isLoading = isScanning;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <MaterialIcons name="arrow-back" size={24} color="#1a1a1a" />
+      </TouchableOpacity>
       <Text style={styles.title}>Add Transaction</Text>
 
       {/* Toggle */}
@@ -256,8 +268,8 @@ export default function TransactionModal() {
           {/* Receipt Section */}
           <Text style={styles.label}>Receipt</Text>
           <View style={styles.receiptButtons}>
-            <Pressable 
-              style={[styles.uploadButton, styles.receiptButton]} 
+            <Pressable
+              style={[styles.uploadButton, styles.receiptButton]}
               onPress={pickReceipt}
               disabled={isLoading}
             >
@@ -269,9 +281,9 @@ export default function TransactionModal() {
                 </Text>
               )}
             </Pressable>
-            
-            <Pressable 
-              style={[styles.uploadButton, styles.cameraButton]} 
+
+            <Pressable
+              style={[styles.uploadButton, styles.cameraButton]}
               onPress={takePicture}
               disabled={isLoading}
             >
@@ -282,33 +294,32 @@ export default function TransactionModal() {
               )}
             </Pressable>
           </View>
-          
+
           {scanError && (
             <Text style={styles.errorText}>Scan failed: {scanError}</Text>
           )}
-          
+
           {/* Show receipt preview only when not scanning */}
           {receipt && !isLoading && (
-            <Image
-              source={{ uri: receipt }}
-              style={styles.receiptImage}
-            />
+            <Image source={{ uri: receipt }} style={styles.receiptImage} />
           )}
-          
+
           {/* Show scanning indicator */}
           {isLoading && (
             <View style={styles.scanningContainer}>
               <ActivityIndicator size="large" color="#377D22" />
               <Text style={styles.scanningText}>Scanning receipt...</Text>
-              <Text style={styles.scanningSubtext}>This may take a few seconds</Text>
+              <Text style={styles.scanningSubtext}>
+                This may take a few seconds
+              </Text>
             </View>
           )}
         </>
       )}
 
       {/* Submit */}
-      <Pressable 
-        style={[styles.submitBtn, (isLoading) && styles.submitBtnDisabled]} 
+      <Pressable
+        style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
         onPress={handleSubmit}
         disabled={isLoading}
       >
@@ -329,6 +340,14 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 80,
     flex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
   },
   title: {
     fontSize: 26,

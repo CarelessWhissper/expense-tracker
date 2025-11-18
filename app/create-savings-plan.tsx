@@ -3,14 +3,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { add } from "../redux/savingsPlanSlice";
@@ -90,7 +90,7 @@ export default function CreateSavingsPlanScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Doel Bedrag *</Text>
             <View style={styles.amountInputContainer}>
-              <Text style={styles.currencySymbol}>€</Text>
+              <Text style={styles.currencySymbol}>SRD </Text>
               <TextInput
                 style={styles.amountInput}
                 placeholder="0.00"

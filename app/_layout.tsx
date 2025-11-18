@@ -1,4 +1,5 @@
 // app/_layout.tsx
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import {
   DarkTheme,
   DefaultTheme,
@@ -6,12 +7,12 @@ import {
 } from "@react-navigation/native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import "react-native-reanimated";
-import { Provider, useSelector } from "react-redux";
-import { store, persistor } from "../redux/store";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useEffect, useState } from "react";
+import "react-native-reanimated";
+import Toast from 'react-native-toast-message';
+import { Provider, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { persistor, store } from "../redux/store";
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
@@ -23,6 +24,10 @@ function RootLayoutNav() {
     (state: any) => state.auth.isAuthenticated
   );
 
+  const hasCompletedOnboarding = useSelector(
+    (state: any) => state.auth.hasCompletedOnboarding
+  );
+
   useEffect(() => {
     // Mark navigation as ready after first render
     setIsNavigationReady(true);
@@ -32,15 +37,29 @@ function RootLayoutNav() {
     if (!isNavigationReady) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "onboarding";
 
     if (!isAuthenticated && !inAuthGroup) {
       // Redirect to sign-in if not authenticated
       router.replace("/(auth)/sign-in");
-    } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to tabs if authenticated
+    } else if (isAuthenticated && !hasCompletedOnboarding && !inOnboarding) {
+      // Redirect to onboarding if authenticated but hasn't completed onboarding
+      router.replace("/onboarding");
+    } else if (
+      isAuthenticated &&
+      hasCompletedOnboarding &&
+      (inAuthGroup || inOnboarding)
+    ) {
+      // Redirect to tabs if authenticated and completed onboarding
       router.replace("/(tabs)");
     }
-  }, [isAuthenticated, segments, isNavigationReady]);
+  }, [
+    isAuthenticated,
+    hasCompletedOnboarding,
+    segments,
+    isNavigationReady,
+    router,
+  ]);
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -59,6 +78,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <RootLayoutNav />
+          <Toast />
       </PersistGate>
     </Provider>
   );

@@ -59,7 +59,7 @@ export const sendMessageAsync = createAsyncThunk(
 
       const aiReply =
         data?.rspObject?.[0]?.message?.content ??
-        "Geen antwoord ontvangen van FinanceGPT.";
+        "FinanceGPT is bezig, proeven later nogmaals.";
 
       return { chatId, aiReply };
     } catch (err: any) {

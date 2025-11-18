@@ -47,6 +47,7 @@ const rootReducer = (state: any, action: UnknownAction) => {
     savingsPlans: savingsPlansReducer,
     reminders: remindersReducer,
     appMode: appModeReducer,
+    chat: chatsSlice.reducer,
   })(state, action);
 };
 

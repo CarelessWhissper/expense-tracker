@@ -176,8 +176,8 @@ export default function OverviewScreen() {
   return (
     
      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
+          {/* Header */}
+          <View style={styles.header}>
           {/* Mode Buttons - Top Centered */}
           <View style={styles.modeButtonsContainer}>
             <TouchableOpacity
@@ -224,7 +224,20 @@ export default function OverviewScreen() {
             </TouchableOpacity>
           </View>
 
-      </View>
+          {/* Greeting Section */}
+          <View style={styles.greetingSection}>
+            <Text style={styles.greeting}>
+              Hello, {user?.username || "User"}!
+            </Text>
+            <Text style={styles.subGreeting}>
+              {new Date().toLocaleDateString("nl-NL", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
+            </Text>
+          </View>
+        </View>
 
       {/* Mode Indicator */}
       {appMode === "business" && (
@@ -234,7 +247,13 @@ export default function OverviewScreen() {
             Business Finance Mode Active
           </Text>
         </View>
+        
       )}
+
+ 
+    
+    
+      
 
       {/* AI Nudge Card */}
       {nudge && appMode === "personal" && (
@@ -243,6 +262,8 @@ export default function OverviewScreen() {
           <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
         </View>
       )}
+
+
 
       {/* Budget Overview Card */}
       {weeklyBudget > 0 && appMode === "personal" ? (
@@ -464,12 +485,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FC",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+
+
+
     padding: 20,
     paddingTop: 60,
-  },  modeButtonsContainer: {
+    gap: 20,
+  },
+  modeButtonsContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",

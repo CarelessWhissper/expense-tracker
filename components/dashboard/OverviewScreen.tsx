@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +20,8 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setMode } from "../../redux/appModeSlice";
 import { IconSymbol } from "../ui/icon-symbol";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function OverviewScreen() {
   const router = useRouter();
@@ -49,6 +52,31 @@ export default function OverviewScreen() {
   const mainSavingsPlan = savingsPlans[0] || null;
   const savingsGoal = mainSavingsPlan?.amount || 0;
   const currentSavings = mainSavingsPlan?.currentAmount || 0;
+
+  // Calculate streak
+  const calculateStreak = (transactions: any[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let streak = 0;
+    
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(today);
+      checkDate.setDate(checkDate.getDate() - i);
+      
+      const hasTransaction = transactions.some((t: any) => {
+        const tDate = new Date(t.date);
+        tDate.setHours(0, 0, 0, 0);
+        return tDate.getTime() === checkDate.getTime();
+      });
+      
+      if (hasTransaction) {
+        streak++;
+      } else if (i > 0) {
+        break;
+      }
+    }
+    return streak;
+  };
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -115,6 +143,102 @@ export default function OverviewScreen() {
       categorySpending,
     };
   }, [transactions, weeklyBudget, savingsGoal, currentSavings]);
+
+  // Gamification stats
+  const streak = useMemo(() => calculateStreak(transactions), [transactions]);
+
+  // Achievements
+  interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    unlocked: boolean;
+    progress: number;
+    target: number;
+  }
+
+  const achievements: Achievement[] = useMemo(() => {
+    const totalTransactions = transactions.length;
+    const totalSaved = currentSavings;
+    
+    return [
+      {
+        id: "first-save",
+        title: "First Save",
+        description: "Save your first €10",
+        icon: "🌟",
+        unlocked: totalSaved >= 10,
+        progress: Math.min(totalSaved, 10),
+        target: 10,
+      },
+      {
+        id: "century",
+        title: "Century Club",
+        description: "Save €100",
+        icon: "💯",
+        unlocked: totalSaved >= 100,
+        progress: Math.min(totalSaved, 100),
+        target: 100,
+      },
+      {
+        id: "streak-7",
+        title: "Week Warrior",
+        description: "7 day streak",
+        icon: "🔥",
+        unlocked: streak >= 7,
+        progress: Math.min(streak, 7),
+        target: 7,
+      },
+      {
+        id: "streak-30",
+        title: "Month Master",
+        description: "30 day streak",
+        icon: "🔥🔥",
+        unlocked: streak >= 30,
+        progress: Math.min(streak, 30),
+        target: 30,
+      },
+      {
+        id: "transactions-50",
+        title: "Active Tracker",
+        description: "Log 50 transactions",
+        icon: "📊",
+        unlocked: totalTransactions >= 50,
+        progress: Math.min(totalTransactions, 50),
+        target: 50,
+      },
+      {
+        id: "transactions-100",
+        title: "Super Tracker",
+        description: "Log 100 transactions",
+        icon: "📈",
+        unlocked: totalTransactions >= 100,
+        progress: Math.min(totalTransactions, 100),
+        target: 100,
+      },
+      {
+        id: "budget-master",
+        title: "Budget Master",
+        description: "Stay within budget",
+        icon: "🎯",
+        unlocked: insights.budgetPercentage <= 100 && weeklyBudget > 0,
+        progress: insights.budgetPercentage <= 100 ? 100 : 0,
+        target: 100,
+      },
+      {
+        id: "savings-500",
+        title: "Big Saver",
+        description: "Save €500",
+        icon: "💰",
+        unlocked: totalSaved >= 500,
+        progress: Math.min(totalSaved, 500),
+        target: 500,
+      },
+    ];
+  }, [currentSavings, streak, transactions.length, insights.budgetPercentage, weeklyBudget]);
+
+  const unlockedAchievements = achievements.filter((a) => a.unlocked).length;
 
   // Generate AI nudge
   const generateNudge = () => {
@@ -238,9 +362,17 @@ export default function OverviewScreen() {
 
           {/* Greeting Section */}
           <View style={styles.greetingSection}>
-            <Text style={styles.greeting}>
-              Hello, {user?.username || "User"}!
-            </Text>
+            <View style={styles.greetingRow}>
+              <Text style={styles.greeting}>
+                Hello, {user?.username || "User"}!
+              </Text>
+              {appMode === "personal" && (
+                <View style={styles.streakBadge}>
+                  <Text style={styles.streakEmojiSmall}>🔥</Text>
+                  <Text style={styles.streakValueSmall}>{streak}</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.subGreeting}>
               {new Date().toLocaleDateString("nl-NL", {
                 weekday: "long",
@@ -333,6 +465,70 @@ export default function OverviewScreen() {
               </Text>
             </TouchableOpacity>
           )
+        )}
+
+        {/* Achievements Section - Only for Personal Mode */}
+        {appMode === "personal" && (
+          <View style={styles.achievementsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Achievements</Text>
+              <Text style={styles.achievementsCount}>
+                {unlockedAchievements}/{achievements.length} unlocked
+              </Text>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.achievementsHorizontal}
+            >
+              {achievements.map((achievement) => (
+                <Pressable
+                  key={achievement.id}
+                  style={[
+                    styles.achievementCard,
+                    !achievement.unlocked && styles.achievementCardLocked,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.achievementIcon,
+                      !achievement.unlocked && styles.achievementIconLocked,
+                    ]}
+                  >
+                    {achievement.unlocked ? achievement.icon : "🔒"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.achievementTitle,
+                      !achievement.unlocked && styles.achievementTitleLocked,
+                    ]}
+                  >
+                    {achievement.title}
+                  </Text>
+                  <Text style={styles.achievementDescription}>
+                    {achievement.description}
+                  </Text>
+                  {!achievement.unlocked && (
+                    <View style={styles.achievementProgress}>
+                      <View style={styles.achievementProgressBar}>
+                        <View
+                          style={[
+                            styles.achievementProgressFill,
+                            {
+                              width: `${(achievement.progress / achievement.target) * 100}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={styles.achievementProgressText}>
+                        {achievement.progress}/{achievement.target}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
         )}
 
         {/* Savings Goal Card - Dynamic based on savings plan */}
@@ -542,10 +738,34 @@ const styles = StyleSheet.create({
   greetingSection: {
     marginTop: 8,
   },
+  greetingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
   greeting: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#2D3436",
+    flex: 1,
+  },
+  streakBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF4E6",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  streakEmojiSmall: {
+    fontSize: 18,
+  },
+  streakValueSmall: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#FF8C00",
   },
   subGreeting: {
     fontSize: 14,
@@ -615,6 +835,81 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontSize: 14,
     fontWeight: "600",
+  },
+  achievementsSection: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  achievementsCount: {
+    fontSize: 14,
+    color: "#636E72",
+  },
+  achievementsHorizontal: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 16,
+    paddingRight: 20,
+  },
+  achievementCard: {
+    width: 140,
+    backgroundColor: "#FFF",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: "#377D22",
+  },
+  achievementCardLocked: {
+    borderColor: "#E5E5E5",
+    opacity: 0.7,
+  },
+  achievementIcon: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  achievementIconLocked: {
+    opacity: 0.5,
+  },
+  achievementTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#2D3436",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  achievementTitleLocked: {
+    color: "#636E72",
+  },
+  achievementDescription: {
+    fontSize: 12,
+    color: "#636E72",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  achievementProgress: {
+    width: "100%",
+    gap: 4,
+  },
+  achievementProgressBar: {
+    height: 6,
+    backgroundColor: "#E5E5E5",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  achievementProgressFill: {
+    height: "100%",
+    backgroundColor: "#377D22",
+    borderRadius: 3,
+  },
+  achievementProgressText: {
+    fontSize: 10,
+    color: "#636E72",
+    textAlign: "center",
   },
   businessCard: {
     backgroundColor: "#FFF",

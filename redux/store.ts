@@ -1,10 +1,12 @@
 // redux/store.js
-import { configureStore } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
+import { persistReducer, persistStore } from "redux-persist";
 
 import authReducer from "./authSlice";
+import budgetReducer from "./budgetSlice";
+import savingsPlansReducer from "./savingsPlanSlice";
 import transactionsReducer from "./transactionsSlice";
 
 // Persist config
@@ -12,12 +14,14 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "transactions"],
+  whitelist: ["auth", "budget", "transactions", "savingsPlan"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  budget:budgetReducer,
   transactions: transactionsReducer,
+  savingsPlan: savingsPlansReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -33,3 +37,5 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;

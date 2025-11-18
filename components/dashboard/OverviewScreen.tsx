@@ -6,6 +6,14 @@ import {
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import {
+  FontAwesome,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
   Dimensions,
@@ -13,7 +21,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  Text,
   TouchableOpacity,
+  View,
   View,
 } from "react-native";
 import { useSelector } from "react-redux";
@@ -21,8 +31,8 @@ import { IconSymbol } from "../ui/icon-symbol";
 const { width } = Dimensions.get("window");
 
 export default function OverviewScreen() {
-  const { transactions, weeklyBudget, savingsGoal, currentSavings } =
-    useSelector((state: any) => state.transactions);
+  const router = useRouter();
+
   const user = useSelector((state: any) => state.auth.user);
   const router = useRouter();
 
@@ -78,7 +88,8 @@ export default function OverviewScreen() {
     const budgetPercentage = (currentWeekSpent / weeklyBudget) * 100;
 
     // Savings progress
-    const savingsPercentage = (currentSavings / savingsGoal) * 100;
+    const savingsPercentage =
+      savingsGoal > 0 ? (currentSavings / savingsGoal) * 100 : 0;
 
     return {
       currentWeekSpent,
@@ -136,7 +147,8 @@ export default function OverviewScreen() {
     };
   };
 
-  const nudge = generateNudge();
+  const nudge =
+    weeklyBudget > 0 && savingsPlans.length > 0 ? generateNudge() : null;
 
   // Recent transactions (last 5)
   const recentTransactions = transactions.slice(0, 5);
@@ -335,6 +347,7 @@ export default function OverviewScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -360,7 +373,7 @@ const styles = StyleSheet.create({
   nudgeCard: {
     backgroundColor: "#FFF",
     marginHorizontal: 20,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     borderLeftWidth: 4,
     marginBottom: 20,
@@ -389,6 +402,12 @@ const styles = StyleSheet.create({
   budgetHeader: {
     alignItems: "center",
     marginBottom: 20,
+  },
+  budgetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
   },
   budgetLabel: {
     fontSize: 14,
@@ -444,6 +463,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#2D3436",
     padding: "auto",
+    padding: "auto",
   },
   savingsAmount: {
     fontSize: 16,
@@ -466,6 +486,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#636E72",
     textAlign: "right",
+  },
+
+  noSavingsCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    padding: 32,
+    borderRadius: 12,
+    marginBottom: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E8F5E9",
+    borderStyle: "dashed",
+  },
+  noSavingsTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 12,
+  },
+  noSavingsSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  noBudgetCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    padding: 32,
+    borderRadius: 16,
+    marginBottom: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E8E4F3",
+    borderStyle: "dashed",
+  },
+  noBudgetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 12,
+  },
+  noBudgetSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
   },
   statsContainer: {
     flexDirection: "row",

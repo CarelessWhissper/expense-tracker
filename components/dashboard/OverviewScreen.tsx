@@ -1,27 +1,37 @@
-import React, { useMemo } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Dimensions,
-} from "react-native";
-import { useSelector } from "react-redux";
-import { LinearGradient } from "expo-linear-gradient";
-import Toast from "react-native-toast-message";
-import {
-  MaterialIcons,
   FontAwesome,
   Ionicons,
   MaterialCommunityIcons,
+  MaterialIcons,
 } from "@expo/vector-icons";
-const { width } = Dimensions.get("window");
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useMemo } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSelector } from "react-redux";
 
 export default function OverviewScreen() {
-  const { transactions, weeklyBudget, savingsGoal, currentSavings } =
-    useSelector((state: any) => state.transactions);
+  const router = useRouter();
+
   const user = useSelector((state: any) => state.auth.user);
+  const transactions = useSelector(
+    (state: any) => state.transactions.transactions
+  );
+  const weeklyBudget = useSelector((state: any) => state.budget.weeklyBudget);
+  const savingsPlans = useSelector((state: any) => state.savingsPlan.plans);
+
+  // Get the first/main savings plan
+  const mainSavingsPlan = savingsPlans[0] || null;
+  const savingsGoal = mainSavingsPlan?.amount || 0;
+  const currentSavings = mainSavingsPlan?.currentAmount || 0;
+
+  console.log("my savings plan,", mainSavingsPlan);
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -75,7 +85,8 @@ export default function OverviewScreen() {
     const budgetPercentage = (currentWeekSpent / weeklyBudget) * 100;
 
     // Savings progress
-    const savingsPercentage = (currentSavings / savingsGoal) * 100;
+    const savingsPercentage =
+      savingsGoal > 0 ? (currentSavings / savingsGoal) * 100 : 0;
 
     return {
       currentWeekSpent,
@@ -100,7 +111,7 @@ export default function OverviewScreen() {
           0
         )}% van je weekbudget gebruikt!`,
         color: "#FF6B6B",
-    
+        icon: "warning" as const,
       };
     }
 
@@ -134,7 +145,8 @@ export default function OverviewScreen() {
     };
   };
 
-  const nudge = generateNudge();
+  const nudge =
+    weeklyBudget > 0 && savingsPlans.length > 0 ? generateNudge() : null;
 
   // Recent transactions (last 5)
   const recentTransactions = transactions.slice(0, 5);
@@ -158,11 +170,13 @@ export default function OverviewScreen() {
   };
 
   return (
-     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.greeting}>Hallo, {user?.name || "User"}!</Text>
+          <Text style={styles.greeting}>
+            Hallo, {user?.username || "User"}!
+          </Text>
           <Text style={styles.subGreeting}>
             {new Date().toLocaleDateString("nl-NL", {
               weekday: "long",
@@ -174,68 +188,112 @@ export default function OverviewScreen() {
       </View>
 
       {/* AI Nudge Card */}
-      <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
-        <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
-        <Text style={styles.nudgeText}>{nudge.message}</Text>
-      </View>
+      {nudge && (
+        <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
+          <Text style={styles.nudgeText}>{nudge.message}</Text>
+          <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
+        </View>
+      )}
 
       {/* Budget Overview Card */}
-      <LinearGradient
-        colors={["#667eea", "#764ba2"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.budgetCard}
-      >
-        <View style={styles.budgetHeader}>
-          <Text style={styles.budgetLabel}>Week Budget</Text>
-          <Text style={styles.budgetAmount}>
-            €{insights.budgetRemaining.toFixed(2)}
-          </Text>
-          <Text style={styles.budgetSubtext}>
-            van €{weeklyBudget.toFixed(2)} over
-          </Text>
-        </View>
+      {weeklyBudget > 0 ? (
+        <TouchableOpacity
+          onPress={() => router.push("/budget-settings")}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#667eea", "#764ba2"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.budgetCard}
+          >
+            <View style={styles.budgetHeader}>
+              <View style={styles.budgetTitleRow}>
+                <Text style={styles.budgetLabel}>Week Budget</Text>
+                <MaterialIcons
+                  name="edit"
+                  size={16}
+                  color="rgba(255,255,255,0.8)"
+                />
+              </View>
+              <Text style={styles.budgetAmount}>
+                €{insights.budgetRemaining.toFixed(2)}
+              </Text>
+              <Text style={styles.budgetSubtext}>
+                van €{weeklyBudget.toFixed(2)} over
+              </Text>
+            </View>
 
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                width: `${Math.min(insights.budgetPercentage, 100)}%`,
-                backgroundColor:
-                  insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
-              },
-            ]}
-          />
-        </View>
-        <Text style={styles.progressText}>
-          {insights.budgetPercentage.toFixed(0)}% gebruikt
-        </Text>
-      </LinearGradient>
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${Math.min(insights.budgetPercentage, 100)}%`,
+                    backgroundColor:
+                      insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {insights.budgetPercentage.toFixed(0)}% gebruikt
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.noBudgetCard}
+          onPress={() => router.push("/budget-settings")}
+        >
+          <MaterialIcons name="add-circle-outline" size={32} color="#667eea" />
+          <Text style={styles.noBudgetTitle}>Stel je weekbudget in</Text>
+          <Text style={styles.noBudgetSubtitle}>
+            Begin met het bijhouden van je uitgaven
+          </Text>
+        </TouchableOpacity>
+      )}
 
-      {/* Savings Goal Card */}
-      <View style={styles.savingsCard}>
-        <View style={styles.savingsHeader}>
-          <Text style={styles.savingsTitle}>
-            <MaterialIcons name="savings" size={20} color="#377D22" /> Spaardoel
+      {/* Savings Goal Card - Dynamic based on savings plan */}
+      {mainSavingsPlan ? (
+        <TouchableOpacity
+          style={styles.savingsCard}
+          onPress={() => router.push("/savings-plan-details")}
+        >
+          <View style={styles.savingsHeader}>
+            <Text style={styles.savingsTitle}>
+              <MaterialIcons name="savings" size={20} color="#377D22" />{" "}
+              {mainSavingsPlan.goalName}
+            </Text>
+            <Text style={styles.savingsAmount}>
+              €{currentSavings} / €{savingsGoal}
+            </Text>
+          </View>
+          <View style={styles.savingsProgressContainer}>
+            <View
+              style={[
+                styles.savingsProgress,
+                { width: `${insights.savingsPercentage}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.savingsPercentage}>
+            {insights.savingsPercentage.toFixed(0)}% bereikt
           </Text>
-          <Text style={styles.savingsAmount}>
-            €{currentSavings} / €{savingsGoal}
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.noSavingsCard}
+          onPress={() => router.push("/create-savings-plan")}
+        >
+          <MaterialIcons name="add-circle-outline" size={32} color="#377D22" />
+          <Text style={styles.noSavingsTitle}>Maak je eerste spaardoel</Text>
+          <Text style={styles.noSavingsSubtitle}>
+            Begin met sparen voor je doelen
           </Text>
-        </View>
-        <View style={styles.savingsProgressContainer}>
-          <View
-            style={[
-              styles.savingsProgress,
-              { width: `${insights.savingsPercentage}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.savingsPercentage}>
-          {insights.savingsPercentage.toFixed(0)}% bereikt
-        </Text>
-      </View>
+        </TouchableOpacity>
+      )}
 
       {/* Quick Stats */}
       <View style={styles.statsContainer}>
@@ -248,10 +306,12 @@ export default function OverviewScreen() {
         </View>
 
         <View style={styles.statCard}>
-          <MaterialIcons 
-            name={insights.percentageChange > 0 ? "trending-up" : "trending-down"} 
-            size={24} 
-            color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"} 
+          <MaterialIcons
+            name={
+              insights.percentageChange > 0 ? "trending-up" : "trending-down"
+            }
+            size={24}
+            color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"}
           />
           <Text
             style={[
@@ -321,6 +381,7 @@ export default function OverviewScreen() {
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -346,7 +407,7 @@ const styles = StyleSheet.create({
   nudgeCard: {
     backgroundColor: "#FFF",
     marginHorizontal: 20,
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     borderLeftWidth: 4,
     marginBottom: 20,
@@ -375,6 +436,12 @@ const styles = StyleSheet.create({
   budgetHeader: {
     alignItems: "center",
     marginBottom: 20,
+  },
+  budgetTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
   },
   budgetLabel: {
     fontSize: 14,
@@ -429,7 +496,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#2D3436",
-    padding:"auto"
+    padding: "auto",
   },
   savingsAmount: {
     fontSize: 16,
@@ -452,6 +519,51 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#636E72",
     textAlign: "right",
+  },
+
+  noSavingsCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    padding: 32,
+    borderRadius: 12,
+    marginBottom: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E8F5E9",
+    borderStyle: "dashed",
+  },
+  noSavingsTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 12,
+  },
+  noSavingsSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  noBudgetCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    padding: 32,
+    borderRadius: 16,
+    marginBottom: 16,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#E8E4F3",
+    borderStyle: "dashed",
+  },
+  noBudgetTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginTop: 12,
+  },
+  noBudgetSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
   },
   statsContainer: {
     flexDirection: "row",

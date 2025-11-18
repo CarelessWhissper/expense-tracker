@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
   },
   seeAll: {
     fontSize: 14,
-    color: "#667eea",
+    color: "#000",
     fontWeight: "500",
   },
   transactionItem: {

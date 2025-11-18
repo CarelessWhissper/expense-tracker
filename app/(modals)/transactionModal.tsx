@@ -1,8 +1,9 @@
+import { useAppDispatch, useAppSelector } from "@/hooks/hook";
 import { addTransaction, scanTransaction } from "@/redux/transactionsSlice";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -10,11 +11,9 @@ import {
   Text,
   TextInput,
   View,
-  ActivityIndicator,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { z } from "zod";
 import Toast from "react-native-toast-message";
+import { z } from "zod";
 
 const TransactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -38,9 +37,10 @@ export default function TransactionModal() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [receipt, setReceipt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isScanning, setIsScanning] = useState(false); // Local scanning state
   
-  const dispatch = useDispatch();
-  const { isLoading, scanError } = useSelector((state: any) => state.transactions);
+  const dispatch = useAppDispatch();
+  const { scanError } = useAppSelector((state) => state.transactions);
 
   async function pickReceipt() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -87,26 +87,46 @@ export default function TransactionModal() {
   }
 
   async function handleScanReceipt(base64: string, uri: string) {
+    setIsScanning(true);
+    
     try {
       const fileName = uri.split("/").pop() || "receipt.jpg";
       const filetype = fileName.split(".").pop() === "png" ? "png" : "jpeg";
       
-      await dispatch(scanTransaction({
+      // Add timeout to the scan request
+      const scanPromise = dispatch(scanTransaction({
         baseEnc: base64,
         fileName,
         filetype,
       })).unwrap();
+
+      // Set 30 second timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Scan timeout - please try again")), 30000)
+      );
+
+      const result = await Promise.race([scanPromise, timeoutPromise]) as any;
+      
+      // Auto-fill form with scanned data
+      const scanResult = result.rspObject.result;
+      setAmount(scanResult.total.toString());
+      setMerchant(scanResult.merchant.name);
+      setDescription(`Receipt ${scanResult.receiptId}`);
+      setCategory("Shopping"); // Default category
       
       Toast.show({
         type: "success",
         text1: "Receipt scanned successfully!",
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Scan failed";
       Toast.show({
         type: "error",
         text1: "Scan failed",
-        text2: "Please enter details manually",
+        text2: errorMessage,
       });
+    } finally {
+      setIsScanning(false);
     }
   }
 
@@ -158,6 +178,8 @@ export default function TransactionModal() {
     setPaymentMethod("");
     setReceipt(null);
   }
+
+  const isLoading = isScanning; 
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -265,18 +287,28 @@ export default function TransactionModal() {
             <Text style={styles.errorText}>Scan failed: {scanError}</Text>
           )}
           
-          {receipt && (
+          {/* Show receipt preview only when not scanning */}
+          {receipt && !isLoading && (
             <Image
               source={{ uri: receipt }}
               style={styles.receiptImage}
             />
+          )}
+          
+          {/* Show scanning indicator */}
+          {isLoading && (
+            <View style={styles.scanningContainer}>
+              <ActivityIndicator size="large" color="#377D22" />
+              <Text style={styles.scanningText}>Scanning receipt...</Text>
+              <Text style={styles.scanningSubtext}>This may take a few seconds</Text>
+            </View>
           )}
         </>
       )}
 
       {/* Submit */}
       <Pressable 
-        style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]} 
+        style={[styles.submitBtn, (isLoading) && styles.submitBtnDisabled]} 
         onPress={handleSubmit}
         disabled={isLoading}
       >
@@ -374,6 +406,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 10,
     alignSelf: "center",
+  },
+  scanningContainer: {
+    alignItems: "center",
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+  },
+  scanningText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  scanningSubtext: {
+    marginTop: 5,
+    fontSize: 14,
+    color: "#666",
   },
   submitBtn: {
     marginTop: 24,

@@ -48,9 +48,7 @@ export default function TabLayout() {
         name="setting"
         options={{
           title: "Settings",
-          headerShown: true, 
-          headerStyle: { backgroundColor: "#F7F9FC" },
-          headerTintColor: "#07101f",
+         
           tabBarIcon: ({ color }) => (
             <IconSymbol name="gearshape.fill" color={color} size={28} />
           ),

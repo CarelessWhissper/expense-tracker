@@ -15,14 +15,14 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "budget", "transactions", "savingsPlan", "reminders"],
+  whitelist: ["auth", "budget", "transactions", "savingsPlans", "reminders"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   budget: budgetReducer,
   transactions: transactionsReducer,
-  savingsPlan: savingsPlansReducer,
+  savingsPlans: savingsPlansReducer,
   reminders: remindersReducer,
 });
 

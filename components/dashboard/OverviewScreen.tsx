@@ -27,7 +27,10 @@ export default function OverviewScreen() {
     (state: any) => state.transactions.transactions
   );
   const weeklyBudget = useSelector((state: any) => state.budget.weeklyBudget);
-  const savingsPlans = useSelector((state: any) => state.savingsPlan.plans);
+
+  const savingsPlans = useSelector(
+    (state: any) => state.savingsPlans?.plans || []
+  );
 
   const [tipIndex, setTipIndex] = useState(0);
 
@@ -214,7 +217,7 @@ export default function OverviewScreen() {
             activeOpacity={0.9}
           >
             <LinearGradient
-              colors={["#667eea", "#764ba2"]}
+              colors={["#377D22", "#2D5A5A"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.budgetCard}

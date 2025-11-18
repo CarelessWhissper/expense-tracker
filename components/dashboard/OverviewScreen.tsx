@@ -16,13 +16,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setMode } from "../../redux/appModeSlice";
 import { IconSymbol } from "../ui/icon-symbol";
 
 export default function OverviewScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const user = useSelector((state: any) => state.auth.user);
+  const appMode = useSelector((state: any) => state.appMode?.mode || "personal");
   const transactions = useSelector(
     (state: any) => state.transactions.transactions
   );
@@ -185,9 +188,56 @@ export default function OverviewScreen() {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          {/* Mode Buttons - Top Centered */}
+          <View style={styles.modeButtonsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.modeButton,
+                appMode === "personal" && styles.modeButtonActive,
+              ]}
+              onPress={() => dispatch(setMode("personal"))}
+            >
+              <MaterialIcons
+                name="person"
+                size={22}
+                color={appMode === "personal" ? "#FFF" : "#636E72"}
+              />
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  appMode === "personal" && styles.modeButtonTextActive,
+                ]}
+              >
+                Personal
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.modeButton,
+                appMode === "business" && styles.modeButtonActive,
+              ]}
+              onPress={() => dispatch(setMode("business"))}
+            >
+              <MaterialIcons
+                name="work"
+                size={22}
+                color={appMode === "business" ? "#FFF" : "#636E72"}
+              />
+              <Text
+                style={[
+                  styles.modeButtonText,
+                  appMode === "business" && styles.modeButtonTextActive,
+                ]}
+              >
+                Business
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Greeting Section */}
+          <View style={styles.greetingSection}>
             <Text style={styles.greeting}>
-              Hallo, {user?.username || "User"}!
+              {appMode === "personal" ? "Personal" : "Business"} Finance
             </Text>
             <Text style={styles.subGreeting}>
               {new Date().toLocaleDateString("nl-NL", {
@@ -412,11 +462,48 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FC",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 20,
     paddingTop: 60,
+    gap: 20,
+  },
+  modeButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 12,
+  },
+  modeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 24,
+    backgroundColor: "#F0F0F0",
+    borderWidth: 1,
+    borderColor: "#E5E5E5",
+    minWidth: 120,
+    justifyContent: "center",
+  },
+  modeButtonActive: {
+    backgroundColor: "#377D22",
+    borderColor: "#377D22",
+    shadowColor: "#377D22",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  modeButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#636E72",
+  },
+  modeButtonTextActive: {
+    color: "#FFF",
+  },
+  greetingSection: {
+    marginTop: 8,
   },
   greeting: {
     fontSize: 28,

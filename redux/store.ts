@@ -4,6 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
 import { persistReducer, persistStore } from "redux-persist";
 
+import appModeReducer from "./appModeSlice";
 import authReducer from "./authSlice";
 import budgetReducer from "./budgetSlice";
 import savingsPlansReducer from "./savingsPlanSlice";
@@ -15,7 +16,7 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "budget", "transactions", "savingsPlan", "reminders"],
+  whitelist: ["auth", "budget", "transactions", "savingsPlan", "reminders", "appMode"],
 };
 
 const rootReducer = combineReducers({
@@ -24,6 +25,7 @@ const rootReducer = combineReducers({
   transactions: transactionsReducer,
   savingsPlan: savingsPlansReducer,
   reminders: remindersReducer,
+  appMode: appModeReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -18,10 +18,29 @@ export default function TabLayout() {
         tabBarInactiveTintColor: "#999", // gray
         tabBarStyle: {
           backgroundColor: "#FDF9F2", // beige/white
-          height: Platform.OS === "android" ? 80 : 70,
-          paddingBottom: Platform.OS === "android" ? 12 : 8,
-          paddingTop: Platform.OS === "android" ? 8 : 0,
+          height: Platform.OS === "android" ? 75 : 75,
+          paddingBottom: Platform.OS === "android" ? 10 : 10,
+          paddingTop: 10,
           borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "500",
+          marginTop: 4,
+          marginBottom: 0,
+          paddingBottom: 0,
+        },
+        tabBarIconStyle: {
+          marginTop: 0,
+          marginBottom: 0,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 0,
+          justifyContent: "center",
+          alignItems: "center",
+          flex: 1,
         },
       }}
     >

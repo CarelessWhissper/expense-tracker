@@ -9,7 +9,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import "react-native-reanimated";
-import Toast from 'react-native-toast-message';
+import Toast from "react-native-toast-message";
 import { Provider, useSelector } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "../redux/store";
@@ -67,7 +67,6 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
-        <Stack.Screen name="(reminders)" />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
@@ -79,7 +78,7 @@ export default function RootLayout() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <RootLayoutNav />
-          <Toast />
+        <Toast />
       </PersistGate>
     </Provider>
   );

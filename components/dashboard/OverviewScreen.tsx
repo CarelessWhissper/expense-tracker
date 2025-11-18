@@ -441,7 +441,7 @@ export default function OverviewScreen() {
                 style={[
                   styles.transactionAmount,
                   {
-                    color: transaction.amount > 0 ? "#95E1D3" : "#2D3436",
+                    color: transaction.amount > 0 ? "#377D22" : "#e61811",
                   },
                 ]}
               >

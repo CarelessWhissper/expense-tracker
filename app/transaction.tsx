@@ -78,7 +78,7 @@ export default function TransactionsScreen() {
 
     return (
       <LinearGradient
-        colors={isIncome ? ['#95E1D3', '#6ECFBD'] : ['#377D22', '#2D6419']}
+        colors={isIncome ? ['#377D22', '#2D6419'] : ['#377D22', '#2D6419']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.iconGradient}
@@ -129,17 +129,17 @@ export default function TransactionsScreen() {
           <View style={styles.statCard}>
             <MaterialIcons name="trending-up" size={20} color="#95E1D3" />
             <Text style={styles.statLabel}>Inkomen</Text>
-            <Text style={styles.statValue}>€{stats.income.toFixed(2)}</Text>
+            <Text style={styles.statValue}>SRD{stats.income.toFixed(2)}</Text>
           </View>
           <View style={[styles.statCard, styles.statCardMiddle]}>
             <MaterialIcons name="trending-down" size={20} color="#FF6B6B" />
             <Text style={styles.statLabel}>Uitgaven</Text>
-            <Text style={styles.statValue}>€{stats.expenses.toFixed(2)}</Text>
+            <Text style={styles.statValue}>SRD {stats.expenses.toFixed(2)}</Text>
           </View>
           <View style={styles.statCard}>
             <MaterialIcons name="account-balance-wallet" size={20} color="#FDD835" />
             <Text style={styles.statLabel}>Totaal</Text>
-            <Text style={styles.statValue}>€{stats.total.toFixed(2)}</Text>
+            <Text style={styles.statValue}>SRD{stats.total.toFixed(2)}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -270,11 +270,12 @@ export default function TransactionsScreen() {
                   style={[
                     styles.transactionAmount,
                     {
-                      color: transaction.amount > 0 ? '#95E1D3' : '#2D3436',
+                      color: transaction.amount > 0 ? '#377D22' : '#e61811',
+                    
                     },
                   ]}
                 >
-                  {transaction.amount > 0 ? '+' : ''}€{Math.abs(transaction.amount).toFixed(2)}
+                  {transaction.amount > 0 ? '+' : ''} SRD {Math.abs(transaction.amount).toFixed(2)}
                 </Text>
                 {transaction.receipt && (
                   <View style={styles.receiptBadge}>

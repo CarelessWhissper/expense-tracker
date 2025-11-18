@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Image,
   StyleSheet,
   Text,
   TextInput,
@@ -91,6 +92,12 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require("./miMoni-boBG.png")}
+        resizeMode="contain"
+        style={styles.logo}
+      />
+
       <Text style={styles.title}>Maak een account</Text>
       <Text style={styles.subtitle}>Welkom! Vul je gegevens hieronder in.</Text>
 
@@ -185,8 +192,8 @@ const styles = StyleSheet.create({
     padding: 24,
     flex: 1,
     justifyContent: "center",
-    maxWidth: 380,
-    alignSelf: "center",
+    // maxWidth: 380,
+    // alignSelf: "center",
   },
   title: {
     fontSize: 32,
@@ -198,6 +205,13 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: "relative",
     justifyContent: "center",
+  },
+
+  logo: {
+    width: 300,
+    height: 300,
+    alignSelf: "center",
+    // marginBottom: 20,
   },
 
   eyeButton: {

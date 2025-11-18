@@ -8,20 +8,22 @@ import authReducer from "./authSlice";
 import budgetReducer from "./budgetSlice";
 import savingsPlansReducer from "./savingsPlanSlice";
 import transactionsReducer from "./transactionsSlice";
+import remindersReducer from "./remindersSlice";
 
 // Persist config
 const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "budget", "transactions", "savingsPlan"],
+  whitelist: ["auth", "budget", "transactions", "savingsPlan", "reminders"],
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
-  budget:budgetReducer,
+  budget: budgetReducer,
   transactions: transactionsReducer,
   savingsPlan: savingsPlansReducer,
+  reminders: remindersReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

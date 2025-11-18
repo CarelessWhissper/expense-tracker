@@ -1,3 +1,4 @@
+import * as FileSystem from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
@@ -31,17 +32,27 @@ export default function TransactionModal() {
   const [description, setDescription] = useState("");
   const [merchant, setMerchant] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [receipt, setReceipt] = useState<string | null>(null);
+  const [receiptUri, setReceiptUri] = useState<string | null>(null);
+  const [receiptBase64, setReceiptBase64] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  async function pickReceipt() {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.8,
-    });
-    if (!result.canceled) {
-      setReceipt(result.assets[0].uri);
-    }
+  // --- Pick or Scan Receipt ---
+  async function pickOrScanReceipt(fromCamera: boolean) {
+    const result = fromCamera
+      ? await ImagePicker.launchCameraAsync({ quality: 0.8 })
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.8 });
+
+    if (!result.canceled) return;
+
+    const uri = result.assets[0].uri;
+    setReceiptUri(uri);
+
+    // Convert to base64
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+  encoding: "base64",
+});
+
+    setReceiptBase64(base64);
   }
 
   function handleSubmit() {
@@ -66,7 +77,12 @@ export default function TransactionModal() {
     setErrors({});
     const formData = {
       ...result.data,
-      receipt: type === "expense" ? receipt : null,
+      receipt: type === "expense" ? {
+        consumer: "",
+        baseEnc: receiptBase64,
+        fileName: "test",
+        filetype: "jpg",
+      } : null,
     };
     console.log("FORM SUBMITTED:", formData);
   }
@@ -143,15 +159,26 @@ export default function TransactionModal() {
             onChangeText={setMerchant}
           />
 
-          {/* Receipt */}
-          <Pressable style={styles.uploadButton} onPress={pickReceipt}>
-            <Text style={styles.uploadText}>
-              {receipt ? "Change Receipt" : "Upload Receipt"}
-            </Text>
-          </Pressable>
-          {receipt && (
+          {/* Scan / Upload Buttons */}
+          <View style={{ flexDirection: "row", gap: 12, marginTop: 10 }}>
+            <Pressable
+              style={styles.uploadButton}
+              onPress={() => pickOrScanReceipt(false)}
+            >
+              <Text style={styles.uploadText}>Upload Photo</Text>
+            </Pressable>
+            <Pressable
+              style={styles.uploadButton}
+              onPress={() => pickOrScanReceipt(true)}
+            >
+              <Text style={styles.uploadText}>Scan Receipt</Text>
+            </Pressable>
+          </View>
+
+          {/* Preview */}
+          {receiptUri && (
             <Image
-              source={{ uri: receipt }}
+              source={{ uri: receiptUri }}
               style={{
                 width: 150,
                 height: 150,
@@ -228,7 +255,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   uploadButton: {
-    marginTop: 10,
+    flex: 1,
     backgroundColor: "#377D22",
     padding: 14,
     borderRadius: 10,

@@ -416,7 +416,8 @@ export default function OverviewScreen() {
         <View style={styles.transactionsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recente Transacties</Text>
-            <TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push("/transaction")}>
               <Text style={styles.seeAll}>Bekijk alles</Text>
             </TouchableOpacity>
           </View>

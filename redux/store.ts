@@ -7,9 +7,9 @@ import { persistReducer, persistStore } from "redux-persist";
 import appModeReducer from "./appModeSlice";
 import authReducer from "./authSlice";
 import budgetReducer from "./budgetSlice";
+import remindersReducer from "./remindersSlice";
 import savingsPlansReducer from "./savingsPlanSlice";
 import transactionsReducer from "./transactionsSlice";
-import remindersReducer from "./remindersSlice";
 
 // Persist config
 const persistConfig = {

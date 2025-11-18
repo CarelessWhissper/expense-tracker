@@ -1,4 +1,3 @@
-import { financialTips } from "@/constants/financialTips";
 import {
   FontAwesome,
   Ionicons,
@@ -7,7 +6,7 @@ import {
 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Pressable,
   ScrollView,
@@ -25,27 +24,19 @@ export default function OverviewScreen() {
   const dispatch = useDispatch();
 
   const user = useSelector((state: any) => state.auth.user);
-  const appMode = useSelector((state: any) => state.appMode?.mode || "personal");
+  const appMode = useSelector((state: any) => state.appMode.mode);
   const transactions = useSelector(
     (state: any) => state.transactions.transactions
   );
   const weeklyBudget = useSelector((state: any) => state.budget.weeklyBudget);
   const savingsPlans = useSelector((state: any) => state.savingsPlan.plans);
 
-  const [tipIndex, setTipIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTipIndex((prev) => (prev + 1) % financialTips.length);
-    }, 10 * 60 * 1000); // 10 minuten
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Get the first/main savings plan
   const mainSavingsPlan = savingsPlans[0] || null;
   const savingsGoal = mainSavingsPlan?.amount || 0;
   const currentSavings = mainSavingsPlan?.currentAmount || 0;
+
+  
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -58,7 +49,6 @@ export default function OverviewScreen() {
       const tDate = new Date(t.date);
       return tDate >= weekAgo && t.amount < 0;
     });
-
     const currentWeekSpent = currentWeekTransactions.reduce(
       (sum: number, t: any) => sum + Math.abs(t.amount),
       0
@@ -184,10 +174,10 @@ export default function OverviewScreen() {
   };
 
   return (
-    <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
+    
+     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={styles.header}>
           {/* Mode Buttons - Top Centered */}
           <View style={styles.modeButtonsContainer}>
             <TouchableOpacity
@@ -234,225 +224,237 @@ export default function OverviewScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Greeting Section */}
-          <View style={styles.greetingSection}>
-            <Text style={styles.greeting}>
-              {appMode === "personal" ? "Personal" : "Business"} Finance
-            </Text>
-            <Text style={styles.subGreeting}>
-              {new Date().toLocaleDateString("nl-NL", {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}
-            </Text>
-          </View>
+      </View>
+
+      {/* Mode Indicator */}
+      {appMode === "business" && (
+        <View style={styles.businessBanner}>
+          <MaterialIcons name="business" size={20} color="#FFF" />
+          <Text style={styles.businessBannerText}>
+            Business Finance Mode Active
+          </Text>
         </View>
+      )}
 
-        {/* AI Nudge Card */}
-        {nudge && (
-          <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
-            <Text style={styles.nudgeText}>{nudge.message}</Text>
-            <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
-          </View>
-        )}
+      {/* AI Nudge Card */}
+      {nudge && appMode === "personal" && (
+        <View style={[styles.nudgeCard, { borderLeftColor: nudge.color }]}>
+          <Text style={styles.nudgeText}>{nudge.message}</Text>
+          <MaterialIcons name={nudge.icon} size={24} color={nudge.color} />
+        </View>
+      )}
 
-        {/* Budget Overview Card */}
-        {weeklyBudget > 0 ? (
-          <TouchableOpacity
-            onPress={() => router.push("/budget-settings")}
-            activeOpacity={0.9}
+      {/* Budget Overview Card */}
+      {weeklyBudget > 0 && appMode === "personal" ? (
+        <TouchableOpacity
+          onPress={() => router.push("/budget-settings")}
+          activeOpacity={0.9}
+        >
+          <LinearGradient
+            colors={["#667eea", "#764ba2"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.budgetCard}
           >
-            <LinearGradient
-              colors={["#667eea", "#764ba2"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.budgetCard}
-            >
-              <View style={styles.budgetHeader}>
-                <View style={styles.budgetTitleRow}>
-                  <Text style={styles.budgetLabel}>Week Budget</Text>
-                  <MaterialIcons
-                    name="edit"
-                    size={16}
-                    color="rgba(255,255,255,0.8)"
-                  />
-                </View>
-                <Text style={styles.budgetAmount}>
-                  €{insights.budgetRemaining.toFixed(2)}
-                </Text>
-                <Text style={styles.budgetSubtext}>
-                  van €{weeklyBudget.toFixed(2)} over
-                </Text>
-              </View>
-
-              {/* Progress Bar */}
-              <View style={styles.progressBarContainer}>
-                <View
-                  style={[
-                    styles.progressBar,
-                    {
-                      width: `${Math.min(insights.budgetPercentage, 100)}%`,
-                      backgroundColor:
-                        insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
-                    },
-                  ]}
+            <View style={styles.budgetHeader}>
+              <View style={styles.budgetTitleRow}>
+                <Text style={styles.budgetLabel}>Week Budget</Text>
+                <MaterialIcons
+                  name="edit"
+                  size={16}
+                  color="rgba(255,255,255,0.8)"
                 />
               </View>
-              <Text style={styles.progressText}>
-                {insights.budgetPercentage.toFixed(0)}% gebruikt
+              <Text style={styles.budgetAmount}>
+                €{insights.budgetRemaining.toFixed(2)}
               </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        ) : (
+              <Text style={styles.budgetSubtext}>
+                van €{weeklyBudget.toFixed(2)} over
+              </Text>
+            </View>
+
+            {/* Progress Bar */}
+            <View style={styles.progressBarContainer}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${Math.min(insights.budgetPercentage, 100)}%`,
+                    backgroundColor:
+                      insights.budgetPercentage > 90 ? "#FF6B6B" : "#95E1D3",
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {insights.budgetPercentage.toFixed(0)}% gebruikt
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      ) : (
+        appMode === "personal" && (
           <TouchableOpacity
             style={styles.noBudgetCard}
             onPress={() => router.push("/budget-settings")}
           >
-            <MaterialIcons
-              name="add-circle-outline"
-              size={32}
-              color="#667eea"
-            />
+            <MaterialIcons name="add-circle-outline" size={32} color="#667eea" />
             <Text style={styles.noBudgetTitle}>Stel je weekbudget in</Text>
             <Text style={styles.noBudgetSubtitle}>
               Begin met het bijhouden van je uitgaven
             </Text>
           </TouchableOpacity>
-        )}
+        )
+      )}
 
-        {/* Savings Goal Card - Dynamic based on savings plan */}
-        {mainSavingsPlan ? (
-          <TouchableOpacity
-            style={styles.savingsCard}
-            onPress={() => router.push("/savings-plan-details")}
-          >
-            <View style={styles.savingsHeader}>
-              <Text style={styles.savingsTitle}>
-                <MaterialIcons name="savings" size={20} color="#377D22" />{" "}
-                {mainSavingsPlan.goalName}
-              </Text>
-              <Text style={styles.savingsAmount}>
-                €{currentSavings} / €{savingsGoal}
-              </Text>
-            </View>
-            <View style={styles.savingsProgressContainer}>
-              <View
-                style={[
-                  styles.savingsProgress,
-                  { width: `${insights.savingsPercentage}%` },
-                ]}
-              />
-            </View>
-            <Text style={styles.savingsPercentage}>
-              {insights.savingsPercentage.toFixed(0)}% bereikt
+      {/* Savings Goal Card - Dynamic based on savings plan */}
+      {mainSavingsPlan && appMode === "personal" ? (
+        <TouchableOpacity
+          style={styles.savingsCard}
+          onPress={() => router.push("/savings-plan-details")}
+        >
+          <View style={styles.savingsHeader}>
+            <Text style={styles.savingsTitle}>
+              <MaterialIcons name="savings" size={20} color="#377D22" />{" "}
+              {mainSavingsPlan.goalName}
             </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.noSavingsCard}
-            onPress={() => router.push("/create-savings-plan")}
-          >
-            <MaterialIcons
-              name="add-circle-outline"
-              size={32}
-              color="#377D22"
-            />
-            <Text style={styles.noSavingsTitle}>Maak je eerste spaardoel</Text>
-            <Text style={styles.noSavingsSubtitle}>
-              Begin met sparen voor je doelen
+            <Text style={styles.savingsAmount}>
+              €{currentSavings} / €{savingsGoal}
             </Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Quick Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <MaterialIcons name="payments" size={24} color="#377D22" />
-            <Text style={styles.statValue}>
-              €{insights.currentWeekSpent.toFixed(2)}
-            </Text>
-            <Text style={styles.statLabel}>Deze week</Text>
           </View>
-
-          <View style={styles.statCard}>
-            <MaterialIcons
-              name={
-                insights.percentageChange > 0 ? "trending-up" : "trending-down"
-              }
-              size={24}
-              color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"}
+          <View style={styles.savingsProgressContainer}>
+            <View
+              style={[
+                styles.savingsProgress,
+                { width: `${insights.savingsPercentage}%` },
+              ]}
             />
+          </View>
+          <Text style={styles.savingsPercentage}>
+            {insights.savingsPercentage.toFixed(0)}% bereikt
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <TouchableOpacity
+          style={styles.noSavingsCard}
+          onPress={() => router.push("/create-savings-plan")}
+        >
+          <MaterialIcons name="add-circle-outline" size={32} color="#377D22" />
+          <Text style={styles.noSavingsTitle}>Maak je eerste spaardoel</Text>
+          <Text style={styles.noSavingsSubtitle}>
+            Begin met sparen voor je doelen
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Quick Stats */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <MaterialIcons name="payments" size={24} color="#377D22" />
+          <Text style={styles.statValue}>
+            €{insights.currentWeekSpent.toFixed(2)}
+          </Text>
+          <Text style={styles.statLabel}>Deze week</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          <MaterialIcons
+            name={
+              insights.percentageChange > 0 ? "trending-up" : "trending-down"
+            }
+            size={24}
+            color={insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3"}
+          />
+          <Text
+            style={[
+              styles.statValue,
+              {
+                color: insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3",
+              },
+            ]}
+          >
+            {insights.percentageChange > 0 ? "+" : ""}
+            {insights.percentageChange.toFixed(0)}%
+          </Text>
+          <Text style={styles.statLabel}>vs vorige week</Text>
+        </View>
+      </View>
+
+      {/* Recent Transactions */}
+      <View style={styles.transactionsSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Recente Transacties</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAll}>Bekijk alles</Text>
+          </TouchableOpacity>
+        </View>
+
+        {recentTransactions.map((transaction: any) => (
+          <View key={transaction.id} style={styles.transactionItem}>
+            <View style={styles.transactionLeft}>
+              <View style={styles.iconContainer}>
+                {renderTransactionIcon(transaction)}
+              </View>
+              <View>
+                <Text style={styles.transactionDescription}>
+                  {transaction.description}
+                </Text>
+                <Text style={styles.transactionCategory}>
+                  {transaction.category}
+                </Text>
+              </View>
+            </View>
             <Text
               style={[
-                styles.statValue,
+                styles.transactionAmount,
                 {
-                  color: insights.percentageChange > 0 ? "#FF6B6B" : "#95E1D3",
+                  color: transaction.amount > 0 ? "#95E1D3" : "#2D3436",
                 },
               ]}
             >
-              {insights.percentageChange > 0 ? "+" : ""}
-              {insights.percentageChange.toFixed(0)}%
+              {transaction.amount > 0 ? "+" : ""}€
+              {Math.abs(transaction.amount).toFixed(2)}
             </Text>
-            <Text style={styles.statLabel}>vs vorige week</Text>
           </View>
+        ))}
+      </View>
+
+      {/* Business Mode Content */}
+      {appMode === "business" && (
+        <View style={styles.businessCard}>
+          <MaterialIcons name="business-center" size={48} color="#377D22" />
+          <Text style={styles.businessCardTitle}>Business Finance</Text>
+          <Text style={styles.businessCardText}>
+            Manage your business expenses, revenue, and financial goals all in
+            one place.
+          </Text>
+          <TouchableOpacity style={styles.businessButton}>
+            <Text style={styles.businessButtonText}>Set Up Business Profile</Text>
+          </TouchableOpacity>
         </View>
+      )}
 
-        {/* Recent Transactions */}
-        <View style={styles.transactionsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recente Transacties</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>Bekijk alles</Text>
-            </TouchableOpacity>
-          </View>
-
-          {recentTransactions.map((transaction: any) => (
-            <View key={transaction.id} style={styles.transactionItem}>
-              <View style={styles.transactionLeft}>
-                <View style={styles.iconContainer}>
-                  {renderTransactionIcon(transaction)}
-                </View>
-                <View>
-                  <Text style={styles.transactionDescription}>
-                    {transaction.description}
-                  </Text>
-                  <Text style={styles.transactionCategory}>
-                    {transaction.category}
-                  </Text>
-                </View>
-              </View>
-              <Text
-                style={[
-                  styles.transactionAmount,
-                  {
-                    color: transaction.amount > 0 ? "#95E1D3" : "#2D3436",
-                  },
-                ]}
-              >
-                {transaction.amount > 0 ? "+" : ""}€
-                {Math.abs(transaction.amount).toFixed(2)}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Micro-Saving Tip */}
+      {/* Micro-Saving Tip */}
+      {appMode === "personal" && (
         <View style={styles.tipCard}>
           <MaterialIcons name="lightbulb" size={24} color="#FFD700" />
           <View style={styles.tipContent}>
             <Text style={styles.tipTitle}>Spaar Tip van de Dag</Text>
-            <Text style={styles.tipText}> {financialTips[tipIndex].text}</Text>
+            <Text style={styles.tipText}>
+              Rond je volgende betaling af naar boven en spaar het verschil! Zo
+              kun je automatisch kleine bedragen opzij zetten.
+            </Text>
           </View>
         </View>
-      </ScrollView>{" "}
-      <Pressable
+      )}
+
+
+       <Pressable
         style={styles.addTransaction}
         onPress={() => router.push("/(modals)/transactionModal")}
       >
         <IconSymbol size={38} name="plus.app.fill" color="white" />
       </Pressable>
-    </>
+    </ScrollView>
   );
 }
 
@@ -462,11 +464,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F9FC",
   },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     padding: 20,
     paddingTop: 60,
-    gap: 20,
-  },
-  modeButtonsContainer: {
+  },  modeButtonsContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -514,6 +517,108 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#636E72",
     marginTop: 4,
+  },
+  modeToggle: {
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  toggleButton: {
+    width: 56,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#E5E5E5",
+    padding: 3,
+    justifyContent: "center",
+  },
+  toggleButtonActive: {
+    backgroundColor: "#377D22",
+  },
+  toggleSwitch: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFF",
+    alignSelf: "flex-start",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleSwitchActive: {
+    alignSelf: "flex-end",
+  },
+  toggleLabels: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  toggleLabel: {
+    fontSize: 12,
+    color: "#636E72",
+    fontWeight: "500",
+  },
+  toggleLabelActive: {
+    color: "#377D22",
+    fontWeight: "600",
+  },
+  businessBanner: {
+    backgroundColor: "#377D22",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    shadowColor: "#377D22",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  businessBannerText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  businessCard: {
+    backgroundColor: "#FFF",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  businessCardTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#2D3436",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  businessCardText: {
+    fontSize: 14,
+    color: "#636E72",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  businessButton: {
+    backgroundColor: "#377D22",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  businessButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
   nudgeCard: {
     backgroundColor: "#FFF",
@@ -800,7 +905,7 @@ const styles = StyleSheet.create({
     color: "#636E72",
     lineHeight: 18,
   },
-  addTransaction: {
+    addTransaction: {
     backgroundColor: "#377D22",
     justifyContent: "center",
     alignItems: "center",
@@ -811,4 +916,6 @@ const styles = StyleSheet.create({
     bottom: 25,
     right: 35,
   },
+
 });
+

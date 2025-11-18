@@ -4,6 +4,9 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -66,72 +69,94 @@ export default function SignInForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={require("./miMoni-boBG.png")}
-        resizeMode="contain"
-        style={styles.logo}
-      />
-
-      {/* <Text style={styles.title}>Welcome Back </Text> */}
-
-      {loginError !== "" && (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorBoxText}>{loginError}</Text>
-        </View>
-      )}
-
-      <View style={styles.inputGroup}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#999"
-          value={formData.email}
-          onChangeText={(text) => setFormData({ ...formData, email: text })}
-          keyboardType="email-address"
-          autoCapitalize="none"
+    <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      {/* Logo stays fixed at the top */}
+      <View style={{ alignItems: "center", marginTop: 40 }}>
+        <Image
+          source={require("./miMoni-boBG.png")}
+          resizeMode="contain"
+          style={{ width: 220, height: 220 }}
         />
-        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
       </View>
 
-      <View style={styles.inputGroup}>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="Wachtwoord"
-            placeholderTextColor="#999"
-            value={formData.password}
-            onChangeText={(text) =>
-              setFormData({ ...formData, password: text })
-            }
-            secureTextEntry={!showPassword}
-          />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            padding: 24,
+            paddingBottom: 140, // makes last input + button always scrollable
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Error box */}
+          {loginError !== "" && (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorBoxText}>{loginError}</Text>
+            </View>
+          )}
 
-          <TouchableOpacity
-            style={styles.eyeButton}
-            onPress={() => setShowPassword(!showPassword)}
-          >
-            <Ionicons
-              name={showPassword ? "eye-off" : "eye"}
-              size={22}
-              color="#888"
+          {/* Email */}
+          <View style={styles.inputGroup}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor="#999"
+              value={formData.email}
+              onChangeText={(text) => setFormData({ ...formData, email: text })}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
+            {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+          </View>
+
+          {/* Password */}
+          <View style={styles.inputGroup}>
+            <View style={styles.inputWrapper}>
+              <TextInput
+                style={styles.input}
+                placeholder="Wachtwoord"
+                placeholderTextColor="#999"
+                value={formData.password}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, password: text })
+                }
+                secureTextEntry={!showPassword}
+              />
+
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={22}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {errors.password && (
+              <Text style={styles.error}>{errors.password}</Text>
+            )}
+          </View>
+
+          {/* Sign in button */}
+          <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+            <Text style={styles.buttonText}>Sign In</Text>
           </TouchableOpacity>
-        </View>
 
-        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-        <Text style={styles.buttonText}>Sign In</Text>
-      </TouchableOpacity>
-
-      <View style={styles.linkContainer}>
-        <Text style={styles.linkText}>Nog geen account? </Text>
-        <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
-          <Text style={styles.link}>Registreer</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Link */}
+          <View style={styles.linkContainer}>
+            <Text style={styles.linkText}>Nog geen account? </Text>
+            <TouchableOpacity onPress={() => router.push("/(auth)/sign-up")}>
+              <Text style={styles.link}>Registreer</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }

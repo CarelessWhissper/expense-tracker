@@ -3,11 +3,14 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useDispatch } from "react-redux";
@@ -91,109 +94,125 @@ export default function SignUpForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <View style={styles.container}>
+  <View style={{ flex: 1, backgroundColor: "#fff" }}>
+    {/* Logo stays OUTSIDE the scrollable area */}
+    <View style={{ alignItems: "center", marginTop: 40 }}>
       <Image
         source={require("./miMoni-boBG.png")}
         resizeMode="contain"
-        style={styles.logo}
+        style={{ width: 220, height: 220 }}
       />
-
-      <Text style={styles.title}>Maak een account</Text>
-      <Text style={styles.subtitle}>Welkom! Vul je gegevens hieronder in.</Text>
-
-      {/* Name */}
-      <TextInput
-        style={styles.input}
-        placeholder="Gebruiker Naam"
-        value={formData.name}
-        onChangeText={(text) => setFormData({ ...formData, name: text })}
-      />
-      {errors.name && <Text style={styles.error}>{errors.name}</Text>}
-
-      {/* Email */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {errors.email && <Text style={styles.error}>{errors.email}</Text>}
-
-      {/* Password */}
-
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          placeholder="Wachtwoord"
-          value={formData.password}
-          onChangeText={(text) => setFormData({ ...formData, password: text })}
-          secureTextEntry={!showPassword}
-        />
-
-        <TouchableOpacity
-          style={styles.eyeButton}
-          onPress={() => setShowPassword(!showPassword)}
-        >
-          <Ionicons
-            name={showPassword ? "eye-off" : "eye"}
-            size={22}
-            color="#888"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {errors.password && <Text style={styles.error}>{errors.password}</Text>}
-
-      {/* Confirm Password */}
-
-      {/* Confirm Password */}
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={styles.input}
-          placeholder="Wachtwoord bevestigen"
-          value={formData.confirmPassword}
-          onChangeText={(text) =>
-            setFormData({ ...formData, confirmPassword: text })
-          }
-          secureTextEntry={!showConfirm}
-        />
-
-        <TouchableOpacity
-          style={styles.eyeButton}
-          onPress={() => setShowConfirm(!showConfirm)}
-        >
-          <Ionicons
-            name={showConfirm ? "eye-off" : "eye"}
-            size={22}
-            color="#888"
-          />
-        </TouchableOpacity>
-      </View>
-
-      {errors.confirmPassword && (
-        <Text style={styles.error}>{errors.confirmPassword}</Text>
-      )}
-
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Account aanmaken</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
-        <Text style={styles.link}>Heb je all een account? Log In</Text>
-      </TouchableOpacity>
     </View>
-  );
+
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          padding: 24,
+          paddingBottom: 140, // ensures bottom input + button stay visible
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Title */}
+        <Text style={styles.title}>Maak een account</Text>
+        <Text style={styles.subtitle}>
+          Welkom! Vul je gegevens hieronder in.
+        </Text>
+
+        {/* Name */}
+        <TextInput
+          style={styles.input}
+          placeholder="Gebruiker Naam"
+          value={formData.name}
+          onChangeText={(text) => setFormData({ ...formData, name: text })}
+        />
+        {errors.name && <Text style={styles.error}>{errors.name}</Text>}
+
+        {/* Email */}
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={formData.email}
+          onChangeText={(text) => setFormData({ ...formData, email: text })}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+
+        {/* Password */}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="Wachtwoord"
+            value={formData.password}
+            onChangeText={(text) =>
+              setFormData({ ...formData, password: text })
+            }
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowPassword(!showPassword)}
+          >
+            <Ionicons
+              name={showPassword ? "eye-off" : "eye"}
+              size={22}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
+        {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+
+        {/* Confirm Password */}
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="Wachtwoord bevestigen"
+            value={formData.confirmPassword}
+            onChangeText={(text) =>
+              setFormData({ ...formData, confirmPassword: text })
+            }
+            secureTextEntry={!showConfirm}
+          />
+          <TouchableOpacity
+            style={styles.eyeButton}
+            onPress={() => setShowConfirm(!showConfirm)}
+          >
+            <Ionicons
+              name={showConfirm ? "eye-off" : "eye"}
+              size={22}
+              color="#888"
+            />
+          </TouchableOpacity>
+        </View>
+        {errors.confirmPassword && (
+          <Text style={styles.error}>{errors.confirmPassword}</Text>
+        )}
+
+        {/* Submit */}
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Account aanmaken</Text>
+        </TouchableOpacity>
+
+        {/* Link */}
+        <TouchableOpacity onPress={() => router.push("/(auth)/sign-in")}>
+          <Text style={styles.link}>Heb je al een account? Log In</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </View>
+);
+
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 24,
-    flex: 1,
-    justifyContent: "center",
-    // maxWidth: 380,
-    // alignSelf: "center",
+    flexGrow: 1,
+  paddingBottom: 40
   },
   title: {
     fontSize: 32,

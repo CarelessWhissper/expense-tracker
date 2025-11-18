@@ -1,7 +1,7 @@
 // redux/store.js
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { configureStore } from "@reduxjs/toolkit";
-import { combineReducers } from "redux";
+import { combineReducers, UnknownAction } from "redux";
 import { persistReducer, persistStore } from "redux-persist";
 
 import appModeReducer from "./appModeSlice";
@@ -16,17 +16,29 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "budget", "transactions", "savingsPlan", "reminders", "appMode"],
+  whitelist: ["auth", "budget", "transactions", "savingsPlans", "reminders", "appMode"],
 };
 
-const rootReducer = combineReducers({
-  auth: authReducer,
-  budget: budgetReducer,
-  transactions: transactionsReducer,
-  savingsPlans: savingsPlansReducer,
-  reminders: remindersReducer,
-  appMode: appModeReducer,
-});
+
+
+
+
+const rootReducer = (state: any, action: UnknownAction) => {
+  if (action.type === "auth/clearAll" || action.type === "RESET_ALL") {
+    
+    AsyncStorage.removeItem('persist:root');
+    state = undefined;
+  }
+
+  return combineReducers({
+    auth: authReducer,
+    budget: budgetReducer,
+    transactions: transactionsReducer,
+    savingsPlans: savingsPlansReducer,
+    reminders: remindersReducer,
+    appMode: appModeReducer,
+  })(state, action);
+};
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

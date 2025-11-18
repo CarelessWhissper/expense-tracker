@@ -25,6 +25,7 @@ const MAPPING = {
   "plus.circle.fill": "add-circle",
   "plus.app.fill": "add",
   "clock.fill": "schedule",
+  "robotic.vacuum.fill": "android",
 } as IconMapping;
 
 /**

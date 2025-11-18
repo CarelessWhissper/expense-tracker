@@ -7,6 +7,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import appModeReducer from "./appModeSlice";
 import authReducer from "./authSlice";
 import budgetReducer from "./budgetSlice";
+import { chatsSlice } from "./chatSlice";
 import remindersReducer from "./remindersSlice";
 import savingsPlansReducer from "./savingsPlanSlice";
 import transactionsReducer from "./transactionsSlice";
@@ -16,7 +17,16 @@ const persistConfig = {
   key: "root",
   storage: AsyncStorage,
   // Only persist these reducers
-  whitelist: ["auth", "budget", "transactions", "savingsPlans", "reminders", "appMode"],
+  whitelist: [
+    "auth",
+    "budget",
+    "transactions",
+    "savingsPlans",
+    "reminders",
+    "appMode",
+    "messages",
+    "chat",
+  ],
 };
 
 

@@ -1,4 +1,6 @@
+import { addTransaction, scanTransaction } from "@/redux/transactionsSlice";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import React, { useState } from "react";
 import {
   Image,
@@ -8,8 +10,11 @@ import {
   Text,
   TextInput,
   View,
+  ActivityIndicator,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { z } from "zod";
+import Toast from "react-native-toast-message";
 
 const TransactionSchema = z.object({
   type: z.enum(["income", "expense"]),
@@ -33,14 +38,75 @@ export default function TransactionModal() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [receipt, setReceipt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const dispatch = useDispatch();
+  const { isLoading, scanError } = useSelector((state: any) => state.transactions);
 
   async function pickReceipt() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      base64: true,
     });
-    if (!result.canceled) {
-      setReceipt(result.assets[0].uri);
+    
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setReceipt(asset.uri);
+      
+      // Auto-scan when receipt is selected
+      if (type === "expense" && asset.base64) {
+        await handleScanReceipt(asset.base64, asset.uri);
+      }
+    }
+  }
+
+  async function takePicture() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Toast.show({
+        type: "error",
+        text1: "Camera permission required",
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setReceipt(asset.uri);
+      
+      // Auto-scan when picture is taken
+      if (type === "expense" && asset.base64) {
+        await handleScanReceipt(asset.base64, asset.uri);
+      }
+    }
+  }
+
+  async function handleScanReceipt(base64: string, uri: string) {
+    try {
+      const fileName = uri.split("/").pop() || "receipt.jpg";
+      const filetype = fileName.split(".").pop() === "png" ? "png" : "jpeg";
+      
+      await dispatch(scanTransaction({
+        baseEnc: base64,
+        fileName,
+        filetype,
+      })).unwrap();
+      
+      Toast.show({
+        type: "success",
+        text1: "Receipt scanned successfully!",
+      });
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Scan failed",
+        text2: "Please enter details manually",
+      });
     }
   }
 
@@ -64,11 +130,33 @@ export default function TransactionModal() {
     }
 
     setErrors({});
-    const formData = {
-      ...result.data,
+
+    const formDataFinal = {
+      id: Math.random().toString(36).substr(2, 9),
+      amount: type === "expense" ? -result.data.amount : result.data.amount,
+      category: result.data.category,
+      description: result.data.description || "",
+      date: new Date().toISOString(),
+      icon: "attach-money",
+      iconType: "MaterialIcons",
       receipt: type === "expense" ? receipt : null,
+      merchant: type === "expense" ? result.data.merchant : undefined,
     };
-    console.log("FORM SUBMITTED:", formData);
+
+    dispatch(addTransaction(formDataFinal));
+
+    Toast.show({
+      type: "success",
+      text1: "Transaction saved!",
+    });
+
+    // Reset form
+    setAmount("");
+    setCategory("");
+    setDescription("");
+    setMerchant("");
+    setPaymentMethod("");
+    setReceipt(null);
   }
 
   return (
@@ -143,29 +231,60 @@ export default function TransactionModal() {
             onChangeText={setMerchant}
           />
 
-          {/* Receipt */}
-          <Pressable style={styles.uploadButton} onPress={pickReceipt}>
-            <Text style={styles.uploadText}>
-              {receipt ? "Change Receipt" : "Upload Receipt"}
-            </Text>
-          </Pressable>
+          {/* Receipt Section */}
+          <Text style={styles.label}>Receipt</Text>
+          <View style={styles.receiptButtons}>
+            <Pressable 
+              style={[styles.uploadButton, styles.receiptButton]} 
+              onPress={pickReceipt}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.uploadText}>
+                  {receipt ? "Change Receipt" : "Upload Receipt"}
+                </Text>
+              )}
+            </Pressable>
+            
+            <Pressable 
+              style={[styles.uploadButton, styles.cameraButton]} 
+              onPress={takePicture}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.uploadText}>Take Picture</Text>
+              )}
+            </Pressable>
+          </View>
+          
+          {scanError && (
+            <Text style={styles.errorText}>Scan failed: {scanError}</Text>
+          )}
+          
           {receipt && (
             <Image
               source={{ uri: receipt }}
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
+              style={styles.receiptImage}
             />
           )}
         </>
       )}
 
       {/* Submit */}
-      <Pressable style={styles.submitBtn} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Save Transaction</Text>
+      <Pressable 
+        style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]} 
+        onPress={handleSubmit}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.submitText}>Save Transaction</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -227,6 +346,17 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 8,
   },
+  receiptButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  receiptButton: {
+    flex: 1,
+  },
+  cameraButton: {
+    flex: 1,
+    backgroundColor: "#2D5A5A",
+  },
   uploadButton: {
     marginTop: 10,
     backgroundColor: "#377D22",
@@ -238,12 +368,22 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
+  receiptImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginTop: 10,
+    alignSelf: "center",
+  },
   submitBtn: {
     marginTop: 24,
     backgroundColor: "#377D22",
     padding: 16,
     borderRadius: 10,
     alignItems: "center",
+  },
+  submitBtnDisabled: {
+    backgroundColor: "#999",
   },
   submitText: {
     color: "white",

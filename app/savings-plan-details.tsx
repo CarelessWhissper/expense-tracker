@@ -42,14 +42,8 @@ export default function SavingsPlanDetailsScreen() {
     );
   }
 
-  const {
-    id,
-    goalName,
-    amount,
-    currentAmount,
-    startDate,
-    endDate,
-  } = mainSavingsPlan;
+  const { id, goalName, amount, currentAmount, startDate, endDate } =
+    mainSavingsPlan;
 
   const progress = (currentAmount / amount) * 100;
   const remaining = amount - currentAmount;
@@ -81,7 +75,10 @@ export default function SavingsPlanDetailsScreen() {
     dispatch(addToCurrentAmount({ id, amount: amountToAdd }));
     setAddAmount("");
     setShowAddMoney(false);
-    Alert.alert("Gelukt!", `€${amountToAdd.toFixed(2)} toegevoegd aan je spaardoel`);
+    Alert.alert(
+      "Gelukt!",
+      `SRD ${amountToAdd.toFixed(2)} toegevoegd aan je spaardoel`
+    );
   };
 
   const handleDelete = () => {
@@ -128,7 +125,7 @@ export default function SavingsPlanDetailsScreen() {
 
         {/* Main Card */}
         <LinearGradient
-           colors={["#377D22", "#2D5A5A"]}
+          colors={["#377D22", "#2D5A5A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.mainCard}
@@ -137,21 +134,25 @@ export default function SavingsPlanDetailsScreen() {
             <MaterialIcons name="savings" size={32} color="#fff" />
           </View>
           <Text style={styles.goalName}>{goalName}</Text>
-          <Text style={styles.currentAmount}>€{currentAmount.toFixed(2)}</Text>
-          <Text style={styles.targetAmount}>van €{amount.toFixed(2)}</Text>
+          <Text style={styles.currentAmount}>
+            SRD {currentAmount.toFixed(2)}
+          </Text>
+          <Text style={styles.targetAmount}>van SRD {amount.toFixed(2)}</Text>
 
           {/* Progress Bar */}
           <View style={styles.progressBarContainer}>
             <View style={[styles.progressBar, { width: `${progress}%` }]} />
           </View>
-          <Text style={styles.progressText}>{progress.toFixed(1)}% bereikt</Text>
+          <Text style={styles.progressText}>
+            {progress.toFixed(1)}% bereikt
+          </Text>
         </LinearGradient>
 
         {/* Quick Stats */}
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <MaterialIcons name="attach-money" size={24} color="#377D22" />
-            <Text style={styles.statValue}>€{remaining.toFixed(2)}</Text>
+            <Text style={styles.statValue}>SRD {remaining.toFixed(2)}</Text>
             <Text style={styles.statLabel}>Nog te gaan</Text>
           </View>
 
@@ -168,7 +169,7 @@ export default function SavingsPlanDetailsScreen() {
           <View style={styles.suggestionContent}>
             <Text style={styles.suggestionTitle}>Aanbevolen Maandelijks</Text>
             <Text style={styles.suggestionAmount}>
-              €{suggestedMonthlySavings.toFixed(2)} per maand
+              SRD {suggestedMonthlySavings.toFixed(2)} per maand
             </Text>
             <Text style={styles.suggestionSubtext}>
               om je doel op tijd te bereiken
@@ -179,14 +180,18 @@ export default function SavingsPlanDetailsScreen() {
         {/* Timeline */}
         <View style={styles.timelineCard}>
           <Text style={styles.sectionTitle}>Tijdlijn</Text>
-          
+
           <View style={styles.timelineRow}>
             <View style={styles.timelineItem}>
-              <MaterialIcons name="play-circle-outline" size={20} color="#377D22" />
+              <MaterialIcons
+                name="play-circle-outline"
+                size={20}
+                color="#377D22"
+              />
               <Text style={styles.timelineLabel}>Start</Text>
               <Text style={styles.timelineDate}>{formatDate(startDate)}</Text>
             </View>
-            
+
             <View style={styles.timelineProgressContainer}>
               <View style={styles.timelineProgressBar}>
                 <View
@@ -200,7 +205,7 @@ export default function SavingsPlanDetailsScreen() {
                 {daysElapsed} / {totalDays} dagen
               </Text>
             </View>
-            
+
             <View style={styles.timelineItem}>
               <MaterialIcons name="flag" size={20} color="#377D22" />
               <Text style={styles.timelineLabel}>Doel</Text>
@@ -222,7 +227,7 @@ export default function SavingsPlanDetailsScreen() {
           ) : (
             <View style={styles.addMoneyContainer}>
               <View style={styles.inputRow}>
-                <Text style={styles.euroSymbol}>€</Text>
+                <Text style={styles.euroSymbol}>SRD </Text>
                 <TextInput
                   style={styles.amountInput}
                   placeholder="0.00"
@@ -273,7 +278,7 @@ export default function SavingsPlanDetailsScreen() {
               <MaterialIcons name="emoji-events" size={20} color="#FFD700" />
             )}
           </View>
-          
+
           <View style={styles.milestone}>
             <View
               style={[
@@ -290,7 +295,7 @@ export default function SavingsPlanDetailsScreen() {
               <MaterialIcons name="emoji-events" size={20} color="#FFD700" />
             )}
           </View>
-          
+
           <View style={styles.milestone}>
             <View
               style={[
@@ -307,7 +312,7 @@ export default function SavingsPlanDetailsScreen() {
               <MaterialIcons name="emoji-events" size={20} color="#FFD700" />
             )}
           </View>
-          
+
           <View style={styles.milestone}>
             <View
               style={[

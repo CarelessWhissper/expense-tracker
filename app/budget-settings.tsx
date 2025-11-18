@@ -2,13 +2,13 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -23,7 +23,7 @@ export default function BudgetSettingsScreen() {
 
   const handleSave = () => {
     const budgetAmount = parseFloat(weeklyBudget);
-    
+
     if (isNaN(budgetAmount) || budgetAmount <= 0) {
       Alert.alert("Ongeldige invoer", "Voer een geldig budget bedrag in");
       return;
@@ -36,7 +36,7 @@ export default function BudgetSettingsScreen() {
 
     Alert.alert(
       "Budget Bijgewerkt",
-      `Je weekbudget is ingesteld op €${budgetAmount.toFixed(2)}`,
+      `Je weekbudget is ingesteld op SRD ${budgetAmount.toFixed(2)}`,
       [
         {
           text: "OK",
@@ -46,7 +46,7 @@ export default function BudgetSettingsScreen() {
     );
   };
 
-  const suggestedBudgets = [50, 100, 150, 200, 250, 300];
+  const suggestedBudgets = [2000, 4000, 5000, 7000, 9000, 10000];
 
   const handleQuickSelect = (amount: number) => {
     setWeeklyBudget(amount.toString());
@@ -72,11 +72,15 @@ export default function BudgetSettingsScreen() {
         {/* Current Budget Display */}
         {currentBudget > 0 && (
           <View style={styles.currentBudgetCard}>
-            <MaterialIcons name="account-balance-wallet" size={32} color="#377D22" />
+            <MaterialIcons
+              name="account-balance-wallet"
+              size={32}
+              color="#377D22"
+            />
             <View style={styles.currentBudgetInfo}>
               <Text style={styles.currentBudgetLabel}>Huidig Week Budget</Text>
               <Text style={styles.currentBudgetAmount}>
-                €{currentBudget.toFixed(2)}
+                SRD {currentBudget.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -86,7 +90,7 @@ export default function BudgetSettingsScreen() {
         <View style={styles.inputSection}>
           <Text style={styles.label}>Nieuw Week Budget</Text>
           <View style={styles.inputContainer}>
-            <Text style={styles.euroSymbol}>€</Text>
+            <Text style={styles.euroSymbol}>SRD </Text>
             <TextInput
               style={styles.input}
               placeholder="0.00"
@@ -120,7 +124,7 @@ export default function BudgetSettingsScreen() {
                       styles.quickSelectTextActive,
                   ]}
                 >
-                  €{amount}
+                  SRD {amount}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -133,10 +137,9 @@ export default function BudgetSettingsScreen() {
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Budget Tips</Text>
             <Text style={styles.infoText}>
-              • Start met een realistisch budget{"\n"}
-              • Bekijk je uitgaven van vorige weken{"\n"}
-              • Pas je budget aan op basis van je behoeften{"\n"}
-              • Laat ruimte voor onverwachte uitgaven
+              • Start met een realistisch budget{"\n"}• Bekijk je uitgaven van
+              vorige weken{"\n"}• Pas je budget aan op basis van je behoeften
+              {"\n"}• Laat ruimte voor onverwachte uitgaven
             </Text>
           </View>
         </View>
@@ -146,7 +149,7 @@ export default function BudgetSettingsScreen() {
           <View style={styles.equivalentCard}>
             <Text style={styles.equivalentLabel}>Maandelijks Equivalent</Text>
             <Text style={styles.equivalentAmount}>
-              ≈ €{(parseFloat(weeklyBudget) * 4.33).toFixed(2)} per maand
+              ≈ SRD {(parseFloat(weeklyBudget) * 4.33).toFixed(2)} per maand
             </Text>
           </View>
         )}

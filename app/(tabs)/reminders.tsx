@@ -167,7 +167,7 @@ export default function RemindersScreen() {
               reminder.isPaid && styles.reminderAmountPaid,
             ]}
           >
-            €{reminder.amount.toFixed(2)}
+            SRD {reminder.amount.toFixed(2)}
           </Text>
 
           {!reminder.isPaid && (
@@ -240,7 +240,7 @@ export default function RemindersScreen() {
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
-               onPress={() => router.push("/(reminders)/create-reminders")}
+              onPress={() => router.push("/(reminders)/create-reminders")}
             >
               <MaterialIcons name="add" size={20} color="#fff" />
               <Text style={styles.emptyButtonText}>Herinnering Toevoegen</Text>

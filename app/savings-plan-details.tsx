@@ -3,13 +3,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCurrentAmount, remove } from "../redux/savingsPlanSlice";
@@ -128,7 +128,7 @@ export default function SavingsPlanDetailsScreen() {
 
         {/* Main Card */}
         <LinearGradient
-          colors={["#377D22", "#4A9D2E"]}
+           colors={["#377D22", "#2D5A5A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.mainCard}
@@ -346,7 +346,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -354,7 +353,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },

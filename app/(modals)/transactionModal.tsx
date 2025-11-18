@@ -1,6 +1,9 @@
+import { useAppDispatch, useAppSelector } from "@/hooks/hook";
+import { addTransaction, scanTransaction } from "@/redux/transactionsSlice";
 import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -9,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { z } from "zod";
 
 const TransactionSchema = z.object({
@@ -33,14 +37,96 @@ export default function TransactionModal() {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [receipt, setReceipt] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isScanning, setIsScanning] = useState(false); // Local scanning state
+  
+  const dispatch = useAppDispatch();
+  const { scanError } = useAppSelector((state) => state.transactions);
 
   async function pickReceipt() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
+      base64: true,
     });
-    if (!result.canceled) {
-      setReceipt(result.assets[0].uri);
+    
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setReceipt(asset.uri);
+      
+      // Auto-scan when receipt is selected
+      if (type === "expense" && asset.base64) {
+        await handleScanReceipt(asset.base64, asset.uri);
+      }
+    }
+  }
+
+  async function takePicture() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") {
+      Toast.show({
+        type: "error",
+        text1: "Camera permission required",
+      });
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setReceipt(asset.uri);
+      
+      // Auto-scan when picture is taken
+      if (type === "expense" && asset.base64) {
+        await handleScanReceipt(asset.base64, asset.uri);
+      }
+    }
+  }
+
+  async function handleScanReceipt(base64: string, uri: string) {
+    setIsScanning(true);
+    
+    try {
+      const fileName = uri.split("/").pop() || "receipt.jpg";
+      const filetype = fileName.split(".").pop() === "png" ? "png" : "jpeg";
+      
+      // Add timeout to the scan request
+      const scanPromise = dispatch(scanTransaction({
+        baseEnc: base64,
+        fileName,
+        filetype,
+      })).unwrap();
+
+      // Set 30 second timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Scan timeout - please try again")), 30000)
+      );
+
+      const result = await Promise.race([scanPromise, timeoutPromise]) as any;
+      
+      // Auto-fill form with scanned data
+      const scanResult = result.rspObject.result;
+      setAmount(scanResult.total.toString());
+      setMerchant(scanResult.merchant.name);
+      setDescription(`Receipt ${scanResult.receiptId}`);
+      setCategory("Shopping"); // Default category
+      
+      Toast.show({
+        type: "success",
+        text1: "Receipt scanned successfully!",
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Scan failed";
+      Toast.show({
+        type: "error",
+        text1: "Scan failed",
+        text2: errorMessage,
+      });
+    } finally {
+      setIsScanning(false);
     }
   }
 
@@ -64,12 +150,36 @@ export default function TransactionModal() {
     }
 
     setErrors({});
-    const formData = {
-      ...result.data,
+
+    const formDataFinal = {
+      id: Math.random().toString(36).substr(2, 9),
+      amount: type === "expense" ? -result.data.amount : result.data.amount,
+      category: result.data.category,
+      description: result.data.description || "",
+      date: new Date().toISOString(),
+      icon: "attach-money",
+      iconType: "MaterialIcons",
       receipt: type === "expense" ? receipt : null,
+      merchant: type === "expense" ? result.data.merchant : undefined,
     };
-    console.log("FORM SUBMITTED:", formData);
+
+    dispatch(addTransaction(formDataFinal));
+
+    Toast.show({
+      type: "success",
+      text1: "Transaction saved!",
+    });
+
+    // Reset form
+    setAmount("");
+    setCategory("");
+    setDescription("");
+    setMerchant("");
+    setPaymentMethod("");
+    setReceipt(null);
   }
+
+  const isLoading = isScanning; 
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -143,29 +253,70 @@ export default function TransactionModal() {
             onChangeText={setMerchant}
           />
 
-          {/* Receipt */}
-          <Pressable style={styles.uploadButton} onPress={pickReceipt}>
-            <Text style={styles.uploadText}>
-              {receipt ? "Change Receipt" : "Upload Receipt"}
-            </Text>
-          </Pressable>
-          {receipt && (
+          {/* Receipt Section */}
+          <Text style={styles.label}>Receipt</Text>
+          <View style={styles.receiptButtons}>
+            <Pressable 
+              style={[styles.uploadButton, styles.receiptButton]} 
+              onPress={pickReceipt}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.uploadText}>
+                  {receipt ? "Change Receipt" : "Upload Receipt"}
+                </Text>
+              )}
+            </Pressable>
+            
+            <Pressable 
+              style={[styles.uploadButton, styles.cameraButton]} 
+              onPress={takePicture}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.uploadText}>Take Picture</Text>
+              )}
+            </Pressable>
+          </View>
+          
+          {scanError && (
+            <Text style={styles.errorText}>Scan failed: {scanError}</Text>
+          )}
+          
+          {/* Show receipt preview only when not scanning */}
+          {receipt && !isLoading && (
             <Image
               source={{ uri: receipt }}
-              style={{
-                width: 150,
-                height: 150,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
+              style={styles.receiptImage}
             />
+          )}
+          
+          {/* Show scanning indicator */}
+          {isLoading && (
+            <View style={styles.scanningContainer}>
+              <ActivityIndicator size="large" color="#377D22" />
+              <Text style={styles.scanningText}>Scanning receipt...</Text>
+              <Text style={styles.scanningSubtext}>This may take a few seconds</Text>
+            </View>
           )}
         </>
       )}
 
       {/* Submit */}
-      <Pressable style={styles.submitBtn} onPress={handleSubmit}>
-        <Text style={styles.submitText}>Save Transaction</Text>
+      <Pressable 
+        style={[styles.submitBtn, (isLoading) && styles.submitBtnDisabled]} 
+        onPress={handleSubmit}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text style={styles.submitText}>Save Transaction</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -227,6 +378,17 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 8,
   },
+  receiptButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  receiptButton: {
+    flex: 1,
+  },
+  cameraButton: {
+    flex: 1,
+    backgroundColor: "#2D5A5A",
+  },
   uploadButton: {
     marginTop: 10,
     backgroundColor: "#377D22",
@@ -238,12 +400,40 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "600",
   },
+  receiptImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginTop: 10,
+    alignSelf: "center",
+  },
+  scanningContainer: {
+    alignItems: "center",
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+  },
+  scanningText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  scanningSubtext: {
+    marginTop: 5,
+    fontSize: 14,
+    color: "#666",
+  },
   submitBtn: {
     marginTop: 24,
     backgroundColor: "#377D22",
     padding: 16,
     borderRadius: 10,
     alignItems: "center",
+  },
+  submitBtnDisabled: {
+    backgroundColor: "#999",
   },
   submitText: {
     color: "white",

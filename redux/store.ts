@@ -23,7 +23,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   budget: budgetReducer,
   transactions: transactionsReducer,
-  savingsPlan: savingsPlansReducer,
+  savingsPlans: savingsPlansReducer,
   reminders: remindersReducer,
   appMode: appModeReducer,
 });

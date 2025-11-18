@@ -1,3 +1,4 @@
+import { financialTips } from "@/constants/financialTips";
 import {
   FontAwesome,
   Ionicons,
@@ -18,7 +19,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { setMode } from "../../redux/appModeSlice";
 import { IconSymbol } from "../ui/icon-symbol";
-import { financialTips } from "@/constants/financialTips";
 
 export default function OverviewScreen() {
   const router = useRouter();

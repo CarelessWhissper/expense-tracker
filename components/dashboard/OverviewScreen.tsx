@@ -8,6 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useMemo } from "react";
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { useSelector } from "react-redux";
+import { IconSymbol } from "../ui/icon-symbol";
 
 export default function OverviewScreen() {
   const router = useRouter();
@@ -31,7 +33,7 @@ export default function OverviewScreen() {
   const savingsGoal = mainSavingsPlan?.amount || 0;
   const currentSavings = mainSavingsPlan?.currentAmount || 0;
 
-  console.log("my savings plan,", mainSavingsPlan);
+  
 
   // Calculate insights
   const insights = useMemo(() => {
@@ -170,7 +172,8 @@ export default function OverviewScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    
+     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
         <View>
@@ -378,6 +381,14 @@ export default function OverviewScreen() {
           </Text>
         </View>
       </View>
+
+
+       <Pressable
+        style={styles.addTransaction}
+        onPress={() => router.push("/(modals)/transactionModal")}
+      >
+        <IconSymbol size={38} name="plus.app.fill" color="white" />
+      </Pressable>
     </ScrollView>
   );
 }
@@ -689,4 +700,16 @@ const styles = StyleSheet.create({
     color: "#636E72",
     lineHeight: 18,
   },
+    addTransaction: {
+    backgroundColor: "#377D22",
+    justifyContent: "center",
+    alignItems: "center",
+    height: 50,
+    width: 50,
+    borderRadius: 25,
+    position: "absolute",
+    bottom: 25,
+    right: 35,
+  },
+
 });

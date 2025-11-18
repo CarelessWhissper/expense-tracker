@@ -64,10 +64,20 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="financeGPT"
+        options={{
+          title: "financeGPT",
+
+          tabBarIcon: ({ color }) => (
+            <IconSymbol name="robotic.vacuum.fill" color={color} size={28} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="setting"
         options={{
           title: "Settings",
-         
+
           tabBarIcon: ({ color }) => (
             <IconSymbol name="gearshape.fill" color={color} size={28} />
           ),
